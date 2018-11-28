@@ -1,0 +1,154 @@
+= Sonarqube Operator
+
+== Overview
+
+This repository contains the code to build a Sonarqube Operator for Red Hat OpenShift Container Platform. It will not run on Kubernetes because it uses the `Route` object to provide access to Sonarqube.
+
+The Operator will create a *PostgreSQL* database with persistent storage and a *SonarQube* instance also with persistent storage connected to the PostgreSQL database.
+
+It is implemented on top of the Red Hat https://github.com/operator-framework/operator-sdk[Operator SDK] - in particular the https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md[Ansible Operator].
+
+== Building the Operator
+
+There is a script `build.sh` which will download the prerequisite Ansible roles from https://github.com/redhat-gpte-devopsautomation/ansible-operator-roles and install the required roles. The script will then build the container image.
+
+Before running the script make sure to update the location of the container image to a repository you have access to. If you decide to build your own also make sure to update deploy/operator.yaml with the updated container image location.
+
+== Installation
+
+The installation of the Custom Resource Definition and Cluster Role requires *cluster-admin* privileges. After that regular users with `admin` privileges on their projects (which is automatically granted to the user who creates a project) can provision the SonarQube Operator in their projects and deploy instances of Sonarqube using the sonarqube.gpte.opentlc.com Custom Resource.
+
+=== Cluster-Admin Tasks
+
+Perform the following tasks as *cluster-admin*:
+
+. Deploy the Custom Resource Definition:
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/crds/sonarqube_v1alpha1_sonarqube_crd.yaml
+----
+
+. Deploy the `sonarqube-admin-rules` Cluster Role (which will be granted automatically to everyone with `admin` privileges):
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/clusterrole.yaml
+----
+
+=== Regular User Tasks
+
+The next steps work either as *cluster-admin* or as a *regular user*.
+
+. Create a new project in which to deploy SonarQube:
++
+[source,sh]
+----
+oc new-project sonarqube --display-name "SonarQube"
+----
+
+. Deploy the *sonarqube-operator* service account:
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/service_account.yaml
+----
+
+. Deploy the *sonarqube-operator* role:
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/role.yaml
+----
+
+. Grant the *sonarqube-operator* role to the *sonarqube-operator* service account:
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/role_binding.yaml
+----
+
+. And finally create the SonarQube *Operator*:
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/operator.yaml
+----
+
+. Once the Operator pod is running the Operator is ready to start creating SonarQube instances.
+
+== Deploying a SonarQube instance using the Operator
+
+A SonarQube instance is deployed by creating a Custom Resource based on the sonarqube Custom Resource Definition. There is an example of a SonarQube CR at https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/crds/sonarqube_v1alpha1_sonarqube_cr.yaml.
+
+The SonarQube Operator understands the following settings under it's *spec* setting:
+
+* postgresqlVolumeSize: The size of the Persistent Volume to be created for the PostgreSQL database (e.g. 4Gi)
+* sonarqubeVolumeSize: The size of the Persistent Volume to be created for SonarQube (e.g. 4Gi)
+* sonarqubeSsl: Weather the created route should be a HTTP (false) or HTTPS (true) route.
+
+.Example
+[source,texinfo]
+----
+apiVersion: gpte.opentlc.com/v1alpha1
+kind: Sonarqube
+metadata:
+  name: sonarqube
+spec:
+  postgresqlVolumeSize: 10Gi
+  sonarqubeVolumeSize: 10Gi
+  sonarqubeSsl: True
+----
+
+. Write the definition to a file (e.g. sonarqube.yaml) and then create the SonarQube instance:
++
+[source,sh]
+----
+oc create -f ./sonarqube.yaml
+----
+
+. The operator will first create the PostgreSQL database, wait until it is up and running and then create the SonarQube pod.
+. Validate that both pods (postgresql and sonarqube) are running before proceeding.
+. You can validate the existence of your SonarQube instance by querying for sonarqube objects:
++
+[source,sh]
+----
+oc get sonarqube
+----
+
+. Get the Route for SonarQube (the PostgreSQL database is not accessible outside of the project):
++
+[source,sh]
+----
+oc get route
+----
+
+. Use the hostname returned in your Web Browser to open the SonarQube UI (default User ID is `admin` with password `admin`).
+
+== Deleting a SonarQube instance
+
+Deleting a SonarQube instance and its associated resources is as simple as deleting the sonarqube object. If you created a SonarQube server called `sonarqube` as in the example above it suffices to run the delete command on that resource:
+
+[source,sh]
+----
+oc delete sonarqube sonarqube
+----
+
+The Operator adds ownerReference fields to all created objects - which means that deleting the sonarqube object also deletes all objects that have been created by the Operator.
+
+== Uninstalling the SonarQube Operator
+
+In case you wish to uninstall the SonarQube Operator make sure that there are no more SonarQube instances running. Once all SonarQube instances have been deleted simply delete the project the operator is running in.
+
+[source,sh]
+----
+oc delete project sonarqube
+----
+
+Then as *cluster-admin* delete the ClusterRole and Custom Resource:
+
+[source,sh]
+----
+oc delete clusterrole sonarqube-admin-rules
+oc delete crd sonarqube.gpte.opentlc.com
+----

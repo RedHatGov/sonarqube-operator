@@ -1,7 +1,8 @@
 apiVersion: gpte.opentlc.com/v1alpha1
 kind: Sonarqube
 metadata:
-  name: example-sonarqube
+  name: sonarqube
 spec:
-  # Add fields here
-  size: 3
+  postgresqlVolumeSize: 10Gi
+  sonarqubeVolumeSize: 10Gi
+  sonarqubeSsl: True
