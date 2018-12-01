@@ -1,0 +1,12 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: sonarqube-cluster-operator
+subjects:
+- kind: ServiceAccount
+  name: sonarqube-operator
+  namespace: gpte-operators
+roleRef:
+  kind: ClusterRole
+  name: sonarqube-cluster-operator
+  apiGroup: rbac.authorization.k8s.io

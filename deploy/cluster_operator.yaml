@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarqube-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: sonarqube-operator
+  template:
+    metadata:
+      labels:
+        name: sonarqube-operator
+    spec:
+      serviceAccountName: sonarqube-operator
+      containers:
+        - name: sonarqube-operator
+          image: quay.io/wkulhanek/sonarqube-operator:v0.0.1
+          ports:
+          - containerPort: 60000
+            name: metrics
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: OPERATOR_NAME
+              value: "sonarqube-operator"

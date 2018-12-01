@@ -16,9 +16,9 @@ Before running the script make sure to update the location of the container imag
 
 == Installation
 
-The installation of the Custom Resource Definition and Cluster Role requires *cluster-admin* privileges. After that regular users with `admin` privileges on their projects (which is automatically granted to the user who creates a project) can provision the SonarQube Operator in their projects and deploy instances of Sonarqube using the sonarqube.gpte.opentlc.com Custom Resource.
+=== Common Installation Steps
 
-=== Cluster-Admin Tasks
+The installation of the Custom Resource Definition and Cluster Role requires *cluster-admin* privileges. After that regular users with `admin` privileges on their projects (which is automatically granted to the user who creates a project) can provision the SonarQube Operator in their projects and deploy instances of Sonarqube using the sonarqube.gpte.opentlc.com Custom Resource.
 
 Perform the following tasks as *cluster-admin*:
 
@@ -36,7 +36,48 @@ oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/mast
 oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/clusterrole.yaml
 ----
 
-=== Regular User Tasks
+=== Clusterwide Installation
+
+Perform the following tasks as *cluster-admin*:
+
+. Create the Cluster Role for the Operator
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/clusterrole.yaml
+----
+
+. Create a project for the operator to run in (different from where the application will be running)
++
+[source,sh]
+----
+oc new-project gpte-operators --display-name="GPTE Operators"
+----
+
+. Deploy the *sonarqube-operator* service account:
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/service_account.yaml
+----
+
+. Grant the *sonarqube-cluster-operator* role to the *sonarqube-operator* service account (if your project is not `gpte-operators` change the project name in the command):
++
+[source,sh]
+----
+oc adm policy add-cluster-role-to-user sonarqube-cluster-operator system:serviceaccount:gpte-operators:sonarqube-operator
+----
+
+. And finally create the SonarQube *Operator*:
++
+[source,sh]
+----
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/cluster_operator.yaml
+----
+
+. Once the Operator pod is running the Operator is ready to start creating SonarQube Servers.
+
+=== Local Installation in a Project
 
 The next steps work either as *cluster-admin* or as a *regular user*.
 
@@ -65,7 +106,7 @@ oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/mast
 +
 [source,sh]
 ----
-oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/role_binding.yaml
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/rolebinding.yaml
 ----
 
 . And finally create the SonarQube *Operator*:
