@@ -32,7 +32,7 @@ rules:
 - apiGroups:
   - gpte.opentlc.com
   resources:
-  - sonarqube
+  - sonarqubes
   verbs:
   - create
   - update

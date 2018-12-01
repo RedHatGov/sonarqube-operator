@@ -26,14 +26,14 @@ Perform the following tasks as *cluster-admin*:
 +
 [source,sh]
 ----
-oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/crds/sonarqube_v1alpha1_sonarqube_crd.yaml
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/crds/gpte_v1alpha1_sonarqube_crd.yaml
 ----
 
 . Deploy the `sonarqube-admin-rules` Cluster Role (which will be granted automatically to everyone with `admin` privileges):
 +
 [source,sh]
 ----
-oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/clusterrole.yaml
+oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/clusterrole_admin.yaml
 ----
 
 === Clusterwide Installation
