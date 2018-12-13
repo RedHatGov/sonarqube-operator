@@ -9,5 +9,5 @@ cp ansible-operator-roles/playbooks/sonarqube.yaml ./playbook.yaml
 rm -rf ansible-operator-roles
 
 # Now build the Operator
-operator-sdk build quay.io/wkulhanek/sonarqube-operator:v0.0.1
-docker push quay.io/wkulhanek/sonarqube-operator:v0.0.1
+operator-sdk build quay.io/wkulhanek/sonarqube-operator:v0.0.2
+docker push quay.io/wkulhanek/sonarqube-operator:v0.0.2
