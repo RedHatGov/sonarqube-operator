@@ -127,6 +127,7 @@ The SonarQube Operator understands the following settings under it's *spec* sett
 * postgresqlVolumeSize: The size of the Persistent Volume to be created for the PostgreSQL database (e.g. 4Gi)
 * sonarqubeVolumeSize: The size of the Persistent Volume to be created for SonarQube (e.g. 4Gi)
 * sonarqubeSsl: Weather the created route should be a HTTP (false) or HTTPS (true) route.
+* sonarqubeServiceName: Optional. The name of the sonarqube service. The default is "sonarqube-metadata.name" where _metadata.name_ is the name of the CR object (in the example below `sonarqube-server`). When specifying this parameter ensure that the service name does not already exist in the project/namespace.
 
 .Example
 [source,texinfo]
@@ -139,6 +140,7 @@ spec:
   postgresqlVolumeSize: 10Gi
   sonarqubeVolumeSize: 10Gi
   sonarqubeSsl: True
+  sonarqubeServiceName: mysonarqube
 ----
 
 . Write the definition to a file (e.g. sonarqube.yaml) and then create the SonarQube instance:
