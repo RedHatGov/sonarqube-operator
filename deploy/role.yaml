@@ -24,6 +24,7 @@ rules:
   - gpte.opentlc.com
   resources:
   - sonarqubes
+  - sonarqubes/status
   verbs:
   - create
   - update
