@@ -1,5 +1,5 @@
-FROM quay.io/water-hole/ansible-operator
+FROM quay.io/operator-framework/ansible-operator:v0.4.0
 
 COPY roles/ ${HOME}/roles/
-COPY playbook.yaml ${HOME}/playbook.yaml
 COPY watches.yaml ${HOME}/watches.yaml
+COPY playbook.yml ${HOME}/playbook.yml

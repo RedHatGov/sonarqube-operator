@@ -1,0 +1,22 @@
+---
+
+- name: Converge
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
+    deploy_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/deploy"
+    image_name: gpte.opentlc.com/sonarqube-operator:testing
+  tasks:
+  - name: Create the gpte.opentlc.com/v1alpha1.Sonarqube
+    k8s:
+      namespace: '{{ namespace }}'
+      definition: "{{ lookup('file', '/'.join([deploy_dir, 'crds/gpte_v1alpha1_sonarqube_cr.yaml'])) }}"
+
+  - name: Get the newly created Custom Resource
+    debug:
+      msg: "{{ lookup('k8s', group='gpte.opentlc.com', api_version='v1alpha1', kind='Sonarqube', namespace=namespace, resource_name=cr.metadata.name) }}"
+    vars:
+      cr: "{{ lookup('file', '/'.join([deploy_dir, 'crds/gpte_v1alpha1_sonarqube_cr.yaml'])) | from_yaml }}"
+
+- import_playbook: "{{ playbook_dir }}/../default/asserts.yml"

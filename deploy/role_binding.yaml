@@ -1,12 +1,13 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: sonarqube-cluster-operator
+  name: sonarqube-operator
 subjects:
 - kind: ServiceAccount
   name: sonarqube-operator
-  namespace: gpte-operators
+  # Replace this with the namespace the operator is deployed in.
+  namespace: REPLACE_NAMESPACE
 roleRef:
   kind: ClusterRole
-  name: sonarqube-cluster-operator
+  name: sonarqube-operator
   apiGroup: rbac.authorization.k8s.io
