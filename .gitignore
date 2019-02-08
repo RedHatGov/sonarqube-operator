@@ -1,4 +1,4 @@
 *.retry
 roles/*
-playbook.yaml
+playbook.yml
 .DS_Store
