@@ -15,7 +15,7 @@ spec:
       serviceAccountName: sonarqube-operator
       containers:
         - name: sonarqube-operator
-          image: quay.io/wkulhanek/sonarqube-operator:v0.0.4
+          image: quay.io/wkulhanek/sonarqube-operator:v0.0.5
           ports:
           - containerPort: 60000
             name: metrics
