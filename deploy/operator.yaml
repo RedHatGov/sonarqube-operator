@@ -15,11 +15,11 @@ spec:
       serviceAccountName: sonarqube-operator
       containers:
         - name: sonarqube-operator
-          image: quay.io/wkulhanek/sonarqube-operator:v0.0.5
+          image: quay.io/wkulhanek/sonarqube-operator:v0.0.6
           ports:
           - containerPort: 60000
             name: metrics
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: WATCH_NAMESPACE
               value: ""
