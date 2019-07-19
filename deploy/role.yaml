@@ -59,3 +59,11 @@ rules:
   - list
   - watch
   - patch
+- apiGroups:
+  - apps
+  resourceNames:
+  - sonarqube-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
