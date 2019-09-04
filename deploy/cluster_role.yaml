@@ -8,11 +8,13 @@ rules:
   resources:
   - pods
   - services
+  - services/finalizers
   - endpoints
   - persistentvolumeclaims
   - events
   - configmaps
   - secrets
+  - serviceaccounts
   verbs:
   - create
   - update
@@ -22,15 +24,25 @@ rules:
   - watch
   - patch
 - apiGroups:
-  - ""
+  - apps
   resources:
-  - namespaces
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
   verbs:
+  - create
+  - update
+  - delete
   - get
+  - list
+  - watch
+  - patch
 - apiGroups:
   - route.openshift.io
   resources:
   - routes
+  - routes/custom-host
   verbs:
   - create
   - update
@@ -47,6 +59,26 @@ rules:
   - get
   - create
 - apiGroups:
+  - apps
+  resourceNames:
+  - sonarqube-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  verbs:
+  - get
+- apiGroups:
   - gpte.opentlc.com
   resources:
   - sonarqubes
@@ -59,11 +91,3 @@ rules:
   - list
   - watch
   - patch
-- apiGroups:
-  - apps
-  resourceNames:
-  - sonarqube-operator
-  resources:
-  - deployments/finalizers
-  verbs:
-  - update

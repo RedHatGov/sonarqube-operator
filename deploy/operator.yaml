@@ -19,15 +19,15 @@ spec:
           - /usr/local/bin/ao-logs
           - /tmp/ansible-operator/runner
           - stdout
-          image: quay.io/wkulhanek/sonarqube-operator:v0.9.0
-          imagePullPolicy: IfNotPresent
+          image: quay.io/gpte-devops-automation/sonarqube-operator:v0.10
+          imagePullPolicy: Always
           volumeMounts:
           - mountPath: /tmp/ansible-operator/runner
             name: runner
             readOnly: true
         - name: operator
-          image: quay.io/wkulhanek/sonarqube-operator:v0.9.0
-          imagePullPolicy: IfNotPresent
+          image: quay.io/gpte-devops-automation/sonarqube-operator:v0.10
+          imagePullPolicy: Always
           volumeMounts:
           - mountPath: /tmp/ansible-operator/runner
             name: runner
