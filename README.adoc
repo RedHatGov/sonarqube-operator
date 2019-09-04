@@ -128,6 +128,7 @@ The SonarQube Operator understands the following settings under it's *spec* sett
 * sonarqubeVolumeSize: The size of the Persistent Volume to be created for SonarQube (e.g. 4Gi)
 * sonarqubeSsl: Weather the created route should be a HTTP (false) or HTTPS (true) route.
 * sonarqubeServiceName: Optional. The name of the sonarqube service. The default is "sonarqube-metadata.name" where _metadata.name_ is the name of the CR object (in the example below `sonarqube-server`). When specifying this parameter ensure that the service name does not already exist in the project/namespace.
+* sonarqubeRoute: Optional. The fully qualified route of the Sonarqube route to be created. This route must be reachable via ingress controllers.
 
 .Example
 [source,texinfo]
