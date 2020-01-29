@@ -10,7 +10,7 @@ It is implemented on top of the Red Hat https://github.com/operator-framework/op
 
 == Building the Operator
 
-There is a script `build.sh` which will download the prerequisite Ansible roles from https://github.com/redhat-gpte-devopsautomation/ansible-operator-roles and install the required roles. The script will then build the container image.
+There is a script `build.sh` which will download the prerequisites (operator-sdk etc) if run with the `-o` option. The script will then build the container image.
 
 Before running the script make sure to update the location of the container image to a repository you have access to. If you decide to build your own also make sure to update deploy/operator.yaml with the updated container image location.
 
@@ -26,14 +26,14 @@ Perform the following tasks as *cluster-admin*:
 +
 [source,sh]
 ----
-oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/crds/gpte_v1alpha1_sonarqube_crd.yaml
+oc create -f https://raw.githubusercontent.com/jharmison-redhat/sonarqube-operator/master/deploy/crds/redhatgov.io_sonarqubes_crd.yaml
 ----
 
 . Deploy the `sonarqube-admin-rules` Cluster Role (which will be granted automatically to everyone with `admin` privileges):
 +
 [source,sh]
 ----
-oc create -f https://raw.githubusercontent.com/wkulhanek/sonarqube-operator/master/deploy/clusterrole_admin.yaml
+oc create -f https://raw.githubusercontent.com/jharmison-redhat/sonarqube-operator/master/deploy/cluster_role.yaml
 ----
 
 === Clusterwide Installation

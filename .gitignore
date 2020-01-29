@@ -1,4 +1,4 @@
 *.retry
-roles/*
-playbook.yml
 .DS_Store
+tags
+.quay_creds

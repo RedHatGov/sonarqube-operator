@@ -1,0 +1,32 @@
+---
+# Tasks file for SonarQube
+- name: Set OpenShift objects for SonarQube to {{ _sonarqube_state }}
+  k8s:
+    state: "{{ _sonarqube_state }}"
+    merge_type:
+    - strategic-merge
+    - merge
+    definition: "{{ lookup('template', item ) | from_yaml }}"
+  loop:
+  - ./templates/service_account.j2
+  - ./templates/persistent_volume_claim.j2
+  - ./templates/service.j2
+  - ./templates/route.j2
+  - ./templates/deployment.j2
+
+- name: Wait until application is available
+  when:
+  - _sonarqube_state == "present"
+  - _sonarqube_wait_for_init|bool
+  k8s_facts:
+    api_version: apps/v1
+    kind: Deployment
+    name: "{{ _sonarqube_name }}"
+    namespace: "{{ _sonarqube_namespace }}"
+  register: r_deployment
+  until:
+  - r_deployment.resources[0].status.availableReplicas is defined
+  - r_deployment.resources[0].status.availableReplicas == 1
+  retries: 50
+  delay: 10
+  ignore_errors: yes

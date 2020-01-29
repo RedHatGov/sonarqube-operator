@@ -1,0 +1,42 @@
+---
+# Persistent Sonarqube deployment playbook.
+#
+# The Playbook expects the following variables to be set in the CR:
+# (Note that Camel case gets converted by the ansible-operator to Snake case)
+# - PostgresqlVolumeSize
+# - SonarqubeVolumeSize
+# - SonarqubeSsl
+# The following variables come from the ansible-operator
+# - ansible_operator_meta.namespace
+# - ansible_operator_meta.name (from the name of the CR)
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+  - name: Set up PostgreSQL
+    include_role:
+      name: ./roles/postgresql-ocp
+    vars:
+      _postgresql_namespace: "{{ ansible_operator_meta.namespace }}"
+      _postgresql_name: "postgresql-{{ ansible_operator_meta.name }}"
+      _postgresql_database_name: "sonardb"
+      _postgresql_user: "sonar"
+      _postgresql_password: "sonar"
+      _postgresql_volume_size: "{{ postgresql_volume_size|d('1Gi') }}"
+      _postgresql_image: "{{ postgresql_image | d('registry.redhat.io/rhscl/postgresql-10-rhel7') }}"
+      _postgresql_image_tag: "{{ postgresql_image_tag | d('latest') }}"
+
+  - name: Set up Sonarqube
+    include_role:
+      name: ./roles/sonarqube-ocp
+    vars:
+      _sonarqube_namespace: "{{ ansible_operator_meta.namespace }}"
+      _sonarqube_name: "{{ sonarqube_service_name | d( ansible_operator_meta.name) }}"
+      _sonarqube_ssl: "{{ sonarqube_ssl|d(False)|bool }}"
+      _sonarqube_route: "{{ sonarqube_route | d('') }}"
+      _sonarqube_image_tag: "{{ sonarqube_image_tag | d('latest') }}"
+      _sonarqube_volume_size: "{{ sonarqube_volume_size |d('1Gi') }}"
+      _sonarqube_postgresql_service_name: "postgresql-{{ ansible_operator_meta.name }}"
+      _sonarqube_postgresql_database_name: sonardb
+      _sonarqube_postgresql_user: sonar
+      _sonarqube_postgresql_password: sonar

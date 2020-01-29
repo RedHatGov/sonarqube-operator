@@ -1,5 +1,5 @@
 ---
 - version: v1alpha1
-  group: gpte.opentlc.com
+  group: redhatgov.io
   kind: Sonarqube
-  playbook: playbook.yml
+  playbook: playbooks/sonarqube-operator.yml

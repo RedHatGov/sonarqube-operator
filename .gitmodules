@@ -1,0 +1,4 @@
+[submodule "roles/postgresql-ocp"]
+	path = roles/postgresql-ocp
+	url = https://github.com/jharmison-redhat/postgresql-ansible-role.git
+	branch = master
