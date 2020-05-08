@@ -6,6 +6,6 @@ subjects:
 - kind: ServiceAccount
   name: sonarqube-operator
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: sonarqube-operator
   apiGroup: rbac.authorization.k8s.io

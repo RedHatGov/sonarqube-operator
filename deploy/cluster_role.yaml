@@ -17,12 +17,12 @@ rules:
   - serviceaccounts
   verbs:
   - create
-  - update
   - delete
   - get
   - list
-  - watch
   - patch
+  - update
+  - watch
 - apiGroups:
   - apps
   resources:
@@ -32,12 +32,12 @@ rules:
   - statefulsets
   verbs:
   - create
-  - update
   - delete
   - get
   - list
-  - watch
   - patch
+  - update
+  - watch
 - apiGroups:
   - route.openshift.io
   resources:
@@ -76,18 +76,18 @@ rules:
   - apps
   resources:
   - replicasets
+  - deployments
   verbs:
   - get
 - apiGroups:
   - gpte.opentlc.com
   resources:
-  - sonarqubes
-  - sonarqubes/status
+  - '*'
   verbs:
   - create
-  - update
   - delete
   - get
   - list
-  - watch
   - patch
+  - update
+  - watch
