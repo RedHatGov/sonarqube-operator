@@ -1,0 +1,8 @@
+domain: io
+layout: ansible.sdk.operatorframework.io/v1
+projectName: sonarqube-operator
+resources:
+- group: redhatgov
+  kind: Sonarqube
+  version: v1alpha1
+version: 3-alpha

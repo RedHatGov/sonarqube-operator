@@ -1,4 +1,7 @@
+*.log
 *.retry
 .DS_Store
 tags
 .quay_creds
+bin
+.placeholder

@@ -2,31 +2,35 @@
 
 == Requirements
 
-This role is designed to set up SonarQube on an OpenShift cluster. The intended use for this role is in an Operator. The role does not set up Kubernetes controllers (like Deployments or ReplicaSets) but creates the SonarQube Pod directly - this is the preferred approach to be used by an Operator.
+This role is designed to set up SonarQube on an OpenShift or Kubernetes cluster cluster. The intended use for this role is in an Operator.
 
-This role also requires a PostgreSQL Database to be running in the same OpenShift project as the SonarQube Server. This database needs to be set up first.
+This role also requires a PostgreSQL Database to be running in the same Namespace as the SonarQube Server. This database needs to be set up first.
 
 == Role Variables
 
 [cols="2,1,1,4",options="header"]
 |====
-|Variable Name|Default|Required|Description
-|_sonarqube_namespace|sonarqube|Yes|Project Name to install SonarQube into
-|_sonarqube_name|sonarqube|Yes|Name of the SonarQube service
-|_sonarqube_ssl|False|No|Set up HTTPS for the SonarQube Route
-|_sonarqube_postgresql_service_name|postgresql|Yes|Name of the PostgreSQL service to connect (should be listening on port 5432)
-|_sonarqube_postgresql_database_name|postgresql|Yes|Name of Database to connect to
-|_sonarqube_postgresql_user|postgresql|Yes|Database User Name
-|_sonarqube_postgresql_password|postgresql|Yes|Database Password
-|_sonarqube_volume_size|1Gi|No|Size of Persistent Volume to be created
-|_sonarqube_memory_request|512Mi|No|Minimum Memory Requirement
-|_sonarqube_memory_limit|512Mi|No|Maximum Memory Requirement
-|_sonarqube_cpu_request|200m|No|Minimum CPU Requirement
-|_sonarqube_cpu_limit|500m|No|Maximum CPU Requirement
-|_sonarqube_wait_for_init|true|No|Wait for the database pod to be running and ready
-|_sonarqube_image|docker.io/wkulhanek/sonarqube|Yes|Container image for Sonarqube
-|_sonarqube_image_tag|latest|Yes|Tag for Sonarqube container image
-|_sonarqube_state|present|No|`present` to install, `absent` to remove
+|Variable Name                      |Default                      |Required     |Description
+|_sonarqube_state                   |present                      |No           |`present` to install, `absent` to remove
+|_sonarqube_namespace               |sonarqube                    |No           |Project Name to install SonarQube into
+|_sonarqube_name                    |sonarqube                    |No           |Name of the SonarQube service
+|_sonarqube_postgresql_service_name |postgresql                   |Yes          |Name of the PostgreSQL service to connect (should be listening on port 5432)
+|_sonarqube_postgresql_database_name|sonardb                      |Yes          |Name of Database to connect to
+|_sonarqube_postgresql_user         |sonar                        |Yes          |Database User Name
+|_sonarqube_postgresql_password     |sonar                        |Yes          |Database Password
+|_sonarqube_persistent              |True                         |No           |Whether to make a PVC for SonarQube
+|_sonarqube_volume_size             |1Gi                          |No           |Size of Persistent Volume to be created
+|_sonarqube_memory_request          |2Gi                          |No           |Minimum Memory Requirement
+|_sonarqube_memory_limit            |3Gi                          |No           |Maximum Memory Requirement
+|_sonarqube_cpu_request             |1                            |No           |Minimum CPU Requirement
+|_sonarqube_cpu_limit               |2                            |No           |Maximum CPU Requirement
+|_sonarqube_wait_for_init           |True                         |No           |Wait for the database pod to be running and ready
+|_sonarqube_image                   |quay.io/redhatgov/sonarqube  |No           |Container image for Sonarqube
+|_sonarqube_image_tag               |latest                       |No           |Tag for Sonarqube container image
+|_sonarqube_image_pull_policy       |IfNotPresent                 |No           |pullPolicy for Sonarqube container image
+|_sonarqube_expose_method           |Route                        |No           |Options include `Route`, `Ingress`, and `None`
+|_sonarqube_expose_uri              |""                           |No           |The URI to expose via Route/Ingress.
+|_sonarqube_ssl                     |True                         |No           |Set up HTTPS for the SonarQube Route/Ingress
 |====
 
 == Dependencies
@@ -35,38 +39,6 @@ This role also requires a PostgreSQL Database to be running in the same OpenShif
 * Running PostgreSQL database listening on port 5432
 * Working .kube/config configuration.
 * The Project/Namespace must exist
-
-== Example Playbook
-
-[source,yaml]
-----
-- hosts: localhost
-  gather_facts: no
-  tasks:
-  - name: Set up PostgreSQL
-    include_role:
-      name: ./roles/postgresql-ocp
-    vars:
-      _postgresql_namespace: "sonarqube"
-      _postgresql_name: "postgresql-sonarqube"
-      _postgresql_database_name: "sonardb"
-      _postgresql_user: "sonar"
-      _postgresql_password: "sonar"
-      _postgresql_volume_size: "4Gi"
-
-  - name: Set up Sonarqube
-    include_role:
-      name: ./roles/sonarqube-ocp
-    vars:
-      _sonarqube_namespace: "sonarqube"
-      _sonarqube_name: "sonarqube"
-      _sonarqube_ssl: "True"
-      _sonarqube_volume_size: "4Gi"
-      _sonarqube_postgresql_service_name: "postgresql-sonarqube"
-      _sonarqube_postgresql_database_name: sonardb
-      _sonarqube_postgresql_user: sonar
-      _sonarqube_postgresql_password: sonar
-----
 
 == License
 

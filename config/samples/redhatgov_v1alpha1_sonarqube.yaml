@@ -1,0 +1,21 @@
+apiVersion: redhatgov.io/v1alpha1
+kind: Sonarqube
+metadata:
+  name: sonarqube-sample
+spec:
+  postgresql:
+    volumeSize: 1Gi
+    image:
+      src: postgres
+      tag: '10'
+  sonarqube:
+    expose:
+      ssl: true                           # There is currently no way to specify an alternate certificate
+      uri: sonarqube-sample.example.com   # You can leave this field out on OpenShift to get the default
+      kind: Ingress                       # This can be of kind Route on OpenShift (the default)
+    image:
+      src: quay.io/redhatgov/sonarqube
+      tag: latest
+      pullPolicy: Always
+    volumeSize: 1Gi
+  persistent: true

@@ -22,7 +22,7 @@ spec:
       containers:
       - name: sonarqube
         image: "{{ _sonarqube_image }}:{{ _sonarqube_image_tag }}"
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: {{ _sonarqube_image_pull_policy }}
         ports:
         - containerPort: 9000
           protocol: TCP
@@ -60,6 +60,7 @@ spec:
           value: "jdbc:postgresql://{{ _sonarqube_postgresql_service_name }}/{{ _sonarqube_postgresql_database_name }}"
         - name: SONARQUBE_JDBC_USERNAME
           value: "{{ _sonarqube_postgresql_user }}"
+{% if _sonarqube_persistent|bool %}
         volumeMounts:
         - name: sonarqube-data
           mountPath: /opt/sonarqube/data
@@ -67,3 +68,4 @@ spec:
       - name: sonarqube-data
         persistentVolumeClaim:
           claimName: "{{ _sonarqube_name }}-pvc"
+{% endif %}

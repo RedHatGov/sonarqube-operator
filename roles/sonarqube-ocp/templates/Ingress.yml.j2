@@ -1,0 +1,21 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: "{{ _sonarqube_name }}"
+  namespace: "{{ _sonarqube_namespace }}"
+  labels:
+    app: "{{ _sonarqube_name }}"
+spec:
+{% if _sonarqube_ssl|d(False)|bool %}
+  tls:
+  - hosts:
+    - "{{ _sonarqube_expose_uri }}"
+{% endif %}
+  rules:
+  - host: "{{ _sonarqube_expose_uri }}"
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: "{{ _sonarqube_name }}"
+          servicePort: 9000
