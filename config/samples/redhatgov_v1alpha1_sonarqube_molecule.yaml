@@ -3,9 +3,17 @@ kind: Sonarqube
 metadata:
   name: sonarqube-sample
 spec:
+  postgresql:
+    image:
+      src: postgres
+      tag: '10'
   sonarqube:
     expose:
       ssl: false
       kind: Ingress
       uri: localhost
+    resources:
+      cpu:
+        request: 500m
+        limit: 1000m
   persistent: false

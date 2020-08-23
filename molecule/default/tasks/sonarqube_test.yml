@@ -5,7 +5,7 @@
     namespace: '{{ namespace }}'
     definition: "{{ lookup('template', '/'.join([samples_dir, cr_file])) | from_yaml }}"
     wait: yes
-    wait_timeout: 300
+    wait_timeout: 600
     wait_condition:
       type: Running
       reason: Successful
@@ -13,10 +13,15 @@
   vars:
     cr_file: 'redhatgov_v1alpha1_sonarqube_molecule.yaml'
 
+- name: Wait for Sonarqube Ingress to answer
+  uri:
+    url: http://localhost:30080
+  register: _result
+  until: _result.status == 200
+  retries: 60
+  delay: 5
+
 # TODO:
-#   - Setup nginx Ingress before application
-#   - Retrieve ingress URI
-#   - Validate that SonarQube can be reached
 #   - Validate SonarQube can be used
 
 # - name: Add assertions here
