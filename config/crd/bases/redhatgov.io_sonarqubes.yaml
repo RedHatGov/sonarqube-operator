@@ -36,7 +36,48 @@ spec:
           status:
             description: Status defines the observed state of Sonarqube
             type: object
-            x-kubernetes-preserve-unknown-fields: true
+            properties:
+              conditions:
+                description: The conditions reported by the Ansible operator
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ansibleResult:
+                      description: The result reported from the last playbook run
+                      type: object
+                      properties:
+                        changed:
+                          description: The number of tasks that resulted in a change
+                          type: integer
+                        completion:
+                          description: The time of completion
+                          type: string
+                        failures:
+                          description: The number of tasks that failed
+                          type: integer
+                        ok:
+                          description: The number of tasks that completed without change
+                          type: integer
+                        skipped:
+                          description: The number of tasks that were skipped
+                          type: integer
+                    lastTransitionTime:
+                      description: The last time the playbook was invoked following a watch
+                      type: string
+                      format: date-time
+                    message:
+                      description: The last message reported from the Ansible Operator SDK
+                      type: string
+                    reason:
+                      description: The reason the status was updated
+                      type: string
+                    status:
+                      description: The boolean return value of the playbook execution, as a string
+                      type: string
+                    type:
+                      description: The type of status change event
+                      type: string
         type: object
     served: true
     storage: true
