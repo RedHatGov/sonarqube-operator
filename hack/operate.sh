@@ -81,7 +81,8 @@ fi
 function print_usage() {
     wrap "usage: $(basename $0) [-h|--help] | [-r|--remove] [-v|--verbose] " \
          "[(-k |--kind=)KIND] [(-i |--image=)IMG] [-b|--build-artifacts] " \
-         "[-p|--push-images] [-d|--deploy-cr] [-u|--undeploy-cr]"
+         "[-p|--push-images] [(-c | --custom-resource=)YAML] " \
+         "[-d|--deploy-cr] [-u|--undeploy-cr]"
 }
 
 function print_help() {
@@ -108,6 +109,8 @@ OPTIONS
     -p|--push-images                Build and push new operator images to your
                                       tagged registry - you must already be
                                       logged in.
+    -c |--custom-resource=YAML      Specify the CR sample file to deploy from
+                                      the config/samples directory.
     -d|--deploy-cr                  Deploy a CR for the operator to the cluster.
     -u|--undeploy-cr                Undeploy the CR for the operator.
 
@@ -135,6 +138,7 @@ IMG=
 KIND=
 PUSH_IMAGES=
 BUILD_ARTIFACTS=
+CR_SAMPLE=
 DEPLOY_CR=
 UNDEPLOY_CR=
 
@@ -181,6 +185,9 @@ while [ $# -gt 0 ]; do
             ;;
         -p|--push-images)
             PUSH_IMAGES=true
+            ;;
+        -c|--custom-resource=*)
+            CR_SAMPLE=$(parse_arg -c "$1" "$2") || shift
             ;;
         -d|--deploy-cr)
             DEPLOY_CR=true
@@ -272,12 +279,12 @@ function remove_artifacts() {
 
 function deploy_cr() {
     validate_cluster || return 1
-    error_run "Deploying custom resource sample" kubectl apply -f config/samples/redhatgov*.yaml || return 1
+    error_run "Deploying custom resource sample" kubectl apply -f "config/samples/${CR_SAMPLE}" || return 1
 }
 
 function undeploy_cr() {
     validate_cluster || return 1
-    warn_run "Undeploying custom resource sample" kubectl delete -f config/samples/redhatgov*.yaml ||:
+    warn_run "Undeploying custom resource sample" kubectl delete -f "config/samples/${CR_SAMPLE}" ||:
 }
 
 if [ "$REMOVE_OPERATOR" ]; then
