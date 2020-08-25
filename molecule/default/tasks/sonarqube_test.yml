@@ -56,11 +56,6 @@
         resources:
           cpu:
             request: 1
-  - spec: # invalid resources.ram key (should be memory)
-      sonarqube:
-        resources:
-          ram:
-            limit: 3Gi
   - spec: # invalid persistent type
       persistent: a string
   loop_control:
