@@ -21,10 +21,56 @@
   retries: 60
   delay: 5
 
+- name: Remove the redhatgov.io/v1alpha1.Sonarqube
+  k8s:
+    state: absent
+    namespace: '{{ namespace }}'
+    definition: "{{ lookup('template', '/'.join([samples_dir, cr_file])) | from_yaml }}"
+  vars:
+    cr_file: 'redhatgov_v1alpha1_sonarqube_molecule.yaml'
+
+- name: Attempt to apply an invalid configurations for Sonarqube
+  k8s:
+    state: present
+    namespace: '{{ namespace }}'
+    definition: "{{ lookup('template', '/'.join([samples_dir, cr_file])) | from_yaml | combine(cr_fault) }}"
+    wait: yes
+    wait_timeout: 600
+    wait_condition:
+      type: Running
+      reason: Successful
+      status: "True"
+  vars:
+    cr_file: 'redhatgov_v1alpha1_sonarqube_molecule.yaml'
+  loop:
+  - spec: # invalid expose.kind
+      sonarqube:
+        expose:
+          kind: Faulty
+  - spec: # invalid expose.ssl type
+      sonarqube:
+        expose:
+          ssl: a string
+  - spec: # invalid resources.cpu.request type
+      sonarqube:
+        resources:
+          cpu:
+            request: 1
+  - spec: # invalid resources.ram key (should be memory)
+      sonarqube:
+        resources:
+          ram:
+            limit: 3Gi
+  - spec: # invalid persistent type
+      persistent: a string
+  loop_control:
+    loop_var: cr_fault
+  ignore_errors: true
+  register: faulty_crs
+
+- name: Verify that the CR failed to be created
+  assert:
+    that: False not in (faulty_crs | json_query('results[].failed') | list)
+
 # TODO:
 #   - Validate SonarQube can be used
-
-# - name: Add assertions here
-#   assert:
-#     that: false
-#     fail_msg: FIXME Add real assertions for your operator
