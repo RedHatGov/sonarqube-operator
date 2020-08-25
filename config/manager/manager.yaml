@@ -28,4 +28,9 @@ spec:
             - "--enable-leader-election"
             - "--leader-election-id=sonarqube-operator"
           image: controller:latest
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
       terminationGracePeriodSeconds: 10
