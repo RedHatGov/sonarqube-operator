@@ -1,11 +1,6 @@
 ---
 # Persistent Sonarqube deployment playbook.
-#
-# The Playbook expects the following variables to be set in the CR:
-# (Note that Camel case gets converted by the ansible-operator to Snake case)
-# - PostgresqlVolumeSize
-# - SonarqubeVolumeSize
-# - SonarqubeSsl
+
 # The following variables come from the ansible-operator
 # - ansible_operator_meta.namespace
 # - ansible_operator_meta.name (from the name of the CR)
@@ -19,11 +14,14 @@
     vars:
       _postgresql_namespace: "{{ ansible_operator_meta.namespace }}"
       _postgresql_name: "postgresql-{{ ansible_operator_meta.name }}"
+
       _postgresql_database_name: sonardb
       _postgresql_user: sonar
       _postgresql_password: sonar
+
       _postgresql_persistent: "{{ persistent | default(True) }}"
       _postgresql_volume_size: "{{ postgresql.volumeSize | default('1Gi') }}"
+
       _postgresql_image: "{{ postgresql.image.src | default('registry.redhat.io/rhel8/postgresql-10') }}"
       _postgresql_image_tag: "{{ postgresql.image.tag | default('latest') }}"
 
