@@ -7,16 +7,8 @@
     - community.kubernetes
 
   tasks:
-    - import_tasks: kustomize.yml
-      vars:
-        state: absent
-
-    - name: Destroy Namespace
-      k8s:
-        api_version: v1
-        kind: Namespace
-        name: '{{ namespace }}'
-        state: absent
+    - name: Destroy test kind cluster
+      command: kind delete cluster --name osdk-test --kubeconfig {{ kubeconfig }}
 
     - name: Unset pull policy
       command: '{{ kustomize }} edit remove patch pull_policy/{{ operator_pull_policy }}.yaml'

@@ -11,14 +11,14 @@ patchesStrategicMerge:
 - manager_image.yaml
 - debug_logs_patch.yaml
 - namespace_scope_patch.yaml
-- ../default/manager_auth_proxy_patch.yaml
+- ../../default/manager_auth_proxy_patch.yaml
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- ../crd
-- ../rbac/namespace_scope
-- ../manager
+- ../../crd
+- ../../rbac/namespace_scope
+- ../../manager
 
 images:
 - name: testing

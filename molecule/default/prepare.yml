@@ -15,14 +15,14 @@
     - name: Set testing image
       command: '{{ kustomize }} edit set image testing={{ operator_image }}'
       args:
-        chdir: '{{ config_dir }}/testing'
+        chdir: '{{ config_dir }}/testing/{{ scope|default("cluster") }}_scope'
 
     - name: Set pull policy
       command: '{{ kustomize }} edit add patch pull_policy/{{ operator_pull_policy }}.yaml'
       args:
-        chdir: '{{ config_dir }}/testing'
+        chdir: '{{ config_dir }}/testing/{{ scope|default("cluster") }}_scope'
 
     - name: Set testing namespace
       command: '{{ kustomize }} edit set namespace {{ namespace }}'
       args:
-        chdir: '{{ config_dir }}/testing'
+        chdir: '{{ config_dir }}/testing/{{ scope|default("cluster") }}_scope'
