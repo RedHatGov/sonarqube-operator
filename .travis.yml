@@ -20,7 +20,8 @@ script:
 - OPERATORDIR="$(pwd)"
 - make kustomize
 - '[ -f ./bin/kustomize ] && KUSTOMIZE="$(realpath ./bin/kustomize)" || KUSTOMIZE="$(which kustomize)"'
-- KUSTOMIZE_PATH=${KUSTOMIZE} TEST_OPERATOR_NAMESPACE=default molecule test -s kind
+- KUSTOMIZE_PATH=${KUSTOMIZE} TEST_OPERATOR_NAMESPACE=default molecule test -s kind-cluster
+- KUSTOMIZE_PATH=${KUSTOMIZE} TEST_OPERATOR_NAMESPACE=default molecule test -s kind-namespace
 deploy:
   provider: script
   script: hack/operate.sh --push-images --verbose

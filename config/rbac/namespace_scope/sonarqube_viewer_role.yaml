@@ -1,0 +1,20 @@
+# permissions for end users to view sonarqubes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sonarqube-viewer-role
+rules:
+- apiGroups:
+  - redhatgov.io
+  resources:
+  - sonarqubes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - redhatgov.io
+  resources:
+  - sonarqubes/status
+  verbs:
+  - get
