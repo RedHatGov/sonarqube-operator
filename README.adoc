@@ -16,7 +16,7 @@ Before running the script make sure to update the location of the container imag
 
 == Installation
 
-=== Common Installation Steps
+=== Operator Installation Steps
 
 The installation of the Custom Resource Definition and Cluster Role requires *cluster-admin* privileges. After that regular users with `admin` privileges on their projects (which is automatically granted to the user who creates a project) can provision the SonarQube Operator in their projects and deploy instances of Sonarqube using the sonarqube.redhatgov.io Custom Resource.
 
@@ -38,7 +38,7 @@ hack/operate.sh
 hack/operate.sh -d
 ----
 
-== Deploying a SonarQube instance using the Operator
+== Deploying a custom SonarQube instance using the Operator
 
 A SonarQube instance is deployed by creating a Custom Resource based on the sonarqube Custom Resource Definition.
 
@@ -116,8 +116,28 @@ The Operator adds ownerReference fields to all created objects - which means tha
 == Uninstalling the SonarQube Operator
 
 In case you wish to uninstall the SonarQube Operator make sure that there are no more SonarQube instances running. Once all SonarQube instances have been deleted simply delete the operator and its resources with:
-
++
 [source,sh]
 ----
 hack/operate.sh -r
 ----
+
+== Notes on disconnected installations
+
+The Operator SDK makes heavy use of Kustomize for development and installation, but intends bundles to be generated for use in an operator catalog. This enables the Operator Lifecycle Manager, deployed onto your cluster, to install and configure operators with a simple `kind: Subscription` object, instead of a large collection of manifests. If you intend on using `hack/operate.sh` it expects you to be in a development environment. Operator installation from this script therefore expects access to the internet. This comes with one extra concern: If `kustomize` isn't in your path, it tries to download it from the internet and save it locally into a `.gitignore`d folder. If you intend on using `hack/operate.sh` to install the operator, you should also bring `kustomize` and place it in the `$PATH` of the user who will be running the script.
+
+To change the image sources for all necessary images for `hack/operate.sh` to deploy the operator, you need to have the following images hosted in a container repository on your disconnected network:
+
+. quay.io/redhatgov/sonarqube-operator:latest
+. quay.io/redhatgov/sonarqube:latest
+. Some PostgreSQL 10 image that either behaves like the Red Hat PostgreSQL 10 RHEL 8 image or the docker.io/library/postgres:10 image.
+
+The places where you must update those sources are then, respectively:
+
+. `hack/operate.conf`: IMG should point to the sonarqube-operator image in your environment _before_ running `hack/operate.sh`
+. The `kind: Sonarqube` custom resource manifest: `spec.sonarqube.image.src` and `spec.sonarqube.image.tag` should be updated
+. The `kind: Sonarqube` custom resource manifest: `spec.postgresql.image.src` and `spec.postgresql.image.tag` should be updated
+
+== OLM installation using a custom catalog source
+
+WIP
