@@ -14,19 +14,15 @@ namePrefix: sonarqube-operator-
 
 bases:
 - ../crd
-
-
-# Apply this rbac set instead if cluster scope is desired
-- ../rbac/cluster_scope
-
-# - ../rbac/namespace_scope
 - ../manager
+# Apply this rbac set if cluster scope is desired
+- ../rbac/cluster_scope
+# Apply this rbac set if namespace scope is desired
+# - ../rbac/namespace_scope
 
 # Only use this when using namespace scope
 # patchesStrategicMerge:
 # - namespace_scope_patch.yaml
-
-
 
 # [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
 #- ../prometheus

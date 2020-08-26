@@ -71,8 +71,8 @@ spec:
         request: 2Gi
         limit: 3Gi
       cpu:
-        request: 1
-        limit: 2
+        request: 1000m
+        limit: 2000m
   persistent: true
 
 ----

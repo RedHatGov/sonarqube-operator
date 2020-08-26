@@ -18,25 +18,172 @@ spec:
         description: Sonarqube is the Schema for the sonarqubes API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
+            description: |
+              APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              internal value, and may reject unrecognized values. More info:
+              https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
+            description: |
+              Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              submits requests to. Cannot be updated. In CamelCase. More info:
+              https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
           spec:
             description: Spec defines the desired state of Sonarqube
             type: object
-            x-kubernetes-preserve-unknown-fields: true
+            properties:
+              persistent:
+                description: |
+                  Defines whether your Sonarqube instance and Postgresql should retain state when the Pods are
+                  terminated and restarted
+                type: boolean
+              sonarqube:
+                description: Defines the desired state of the Sonarqube Deployment
+                type: object
+                properties:
+                  expose:
+                    description: Defines the ways in which Sonarqube should be exposed
+                    type: object
+                    properties:
+                      kind:
+                        description: The kind of resource to use to expose Sonarqube
+                        type: string
+                        enum:
+                        - Route
+                        - Ingress
+                        - None
+                      uri:
+                        description: The URI that should be exposed for Sonarqube (do not include protocol)
+                        type: string
+                        pattern: ^[^{}/ :\\]+(?::\d+)?$
+                      ssl:
+                        description: Defines SSL/TLS state, if your IngressController/Router supports it
+                        type: boolean
+                  image:
+                    description: Defines the ways in which the Sonarqube image should be sourced and managed
+                    type: object
+                    properties:
+                      src:
+                        description: Defines the registry source and image name for the Sonarqube image
+                        type: string
+                      tag:
+                        description: Defines the specific tag to use for the Sonarqube image
+                        type: string
+                      pullPolicy:
+                        description: |
+                          Defines the pullPolicy that should be applied to the image on the Deployment resource
+                        type: string
+                        enum:
+                        - Always
+                        - IfNotPresent
+                        - Never
+                  volumeSize:
+                    description: |
+                      Defines the size of the volume, measured in bytes, that should be requested for Sonarqube's data
+                      directory
+                    type: string
+                    pattern: ^[0-9]+[EPTGMK]?i?$
+                  resources:
+                    description: Defines the resource constraints that should apply to Sonarqube
+                    type: object
+                    properties:
+                      cpu:
+                        description: Defines the CPU constraints that should apply to Sonarqube
+                        type: object
+                        properties:
+                          request:
+                            description: |
+                              How much CPU, measured in cores or millicores, should Sonarqube be expected to always
+                              have access to
+                            type: string
+                            pattern: ^[0-9]+m?$
+                          limit:
+                            description: How much CPU, measured in cores or millicores, should Sonarqube be limited to
+                            type: string
+                            pattern: ^[0-9]+m?$
+                      memory:
+                        description: Defines the memory constraints that should apply to Sonarqube
+                        type: object
+                        properties:
+                          request:
+                            description: |
+                              How much memory, measured in bytes, should Sonarqube be expected to always have access to
+                            type: string
+                            pattern: ^[0-9]+[EPTGMK]?i?$
+                          limit:
+                            description: How much memory, measured in bytes, should Sonarqube be limited to
+                            type: string
+                            pattern: ^[0-9]+[EPTGMK]?i?$
+              postgresql:
+                description: Defines the desired state of the Postgresql Deployment that supports Sonarqube
+                type: object
+                properties:
+                  image:
+                    description: Defines the ways in which the Postgresql image should be sourced and managed
+                    type: object
+                    properties:
+                      src:
+                        description: Defines the registry source and image name for the Postgresql image
+                        type: string
+                      tag:
+                        description: Defines the specific tag to use for the Postgresql image
+                        type: string
+                  volumeSize:
+                    description: |
+                      Defines the size of the volume, measured in bytes, that should be requested for Postgresql's
+                      database directory
+                    type: string
+                    pattern: ^[0-9]+[EPTGMK]?i?$
           status:
             description: Status defines the observed state of Sonarqube
             type: object
-            x-kubernetes-preserve-unknown-fields: true
+            properties:
+              conditions:
+                description: The conditions reported by the Ansible operator
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ansibleResult:
+                      description: The result reported from the last playbook run
+                      type: object
+                      properties:
+                        changed:
+                          description: The number of tasks that resulted in a change
+                          type: integer
+                        completion:
+                          description: The time of completion
+                          type: string
+                        failures:
+                          description: The number of tasks that failed
+                          type: integer
+                        ok:
+                          description: The number of tasks that completed without change
+                          type: integer
+                        skipped:
+                          description: The number of tasks that were skipped
+                          type: integer
+                    lastTransitionTime:
+                      description: The last time the playbook was invoked following a watch
+                      type: string
+                      format: date-time
+                    message:
+                      description: The last message reported from the Ansible Operator SDK
+                      type: string
+                    reason:
+                      description: The reason the status was updated
+                      type: string
+                    status:
+                      description: The boolean return value of the playbook execution, as a string
+                      type: string
+                    type:
+                      description: The type of status change event
+                      type: string
         type: object
     served: true
     storage: true
