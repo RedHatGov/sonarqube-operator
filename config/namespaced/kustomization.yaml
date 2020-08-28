@@ -6,22 +6,8 @@ namePrefix: sonarqube-operator-
 
 bases:
 - ../crd
-- ../rbac
+- ../rbac/namespaced
 - ../manager
-
-patchesJson6902:
-- path: namespace_scope_patch_role.yaml
-  target:
-    group: rbac.authorization.k8s.io
-    version: v1
-    kind: ClusterRole
-    name: manager-role
-- path: namespace_scope_patch_rolebinding.yaml
-  target:
-    group: rbac.authorization.k8s.io
-    version: v1
-    kind: ClusterRoleBinding
-    name: manager-rolebinding
 
 patchesStrategicMerge:
 - namespace_scope_patch.yaml

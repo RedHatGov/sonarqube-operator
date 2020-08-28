@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - ../../crd
-- ../../rbac
+- ../../rbac/namespaced
 - ../../manager
 
 namespace: osdk-test
@@ -16,17 +16,3 @@ patchesStrategicMerge:
 - ../manager_image.yaml
 - ../debug_logs_patch.yaml
 - ../../namespaced/namespace_scope_patch.yaml
-
-patchesJson6902:
-- path: ../../namespaced/namespace_scope_patch_role.yaml
-  target:
-    group: rbac.authorization.k8s.io
-    version: v1
-    kind: ClusterRole
-    name: manager-role
-- path: ../../namespaced/namespace_scope_patch_rolebinding.yaml
-  target:
-    group: rbac.authorization.k8s.io
-    version: v1
-    kind: ClusterRoleBinding
-    name: manager-rolebinding

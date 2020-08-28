@@ -1,4 +1,0 @@
----
-- op: replace
-  path: /kind
-  value: Role
