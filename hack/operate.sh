@@ -315,7 +315,7 @@ function validate_kustomize() {
 function kustomize_namespace() {
     validate_kustomize || return 1
     pushd config/$OVERLAY &>/dev/null
-    old_namespace=$(awk '/^namespace:/{print $2}')
+    old_namespace=$(awk '/^namespace:/{print $2}' kustomization.yaml)
     error_run "Kustomizing namespace" kustomize edit set namespace "$NAMESPACE" || return 1
     popd &>/dev/null
 }
