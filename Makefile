@@ -14,6 +14,8 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
 
+OVERLAY ?= default
+
 all: docker-build
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
@@ -31,11 +33,11 @@ uninstall: kustomize
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/${OVERLAY} | kubectl apply -f -
 
 # Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
 undeploy: kustomize
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+	$(KUSTOMIZE) build config/${OVERLAY} | kubectl delete -f -
 
 # Build the docker image
 docker-build:

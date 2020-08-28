@@ -81,7 +81,7 @@ fi
 function print_usage() {
     wrap "usage: $(basename $0) [-h|--help] | [-r|--remove] [-v|--verbose] " \
          "[(-k |--kind=)KIND] [(-i |--image=)IMG] [-b|--build-artifacts] " \
-         "[-p|--push-images] [-n|--no-install] " \
+         "[-p|--push-images] [-n|--no-install] [(-o |--overlay=)DIR]" \
          "[(-c | --custom-resource=)YAML] [-d|--deploy-cr] [-u|--undeploy-cr]"
 }
 
@@ -110,6 +110,9 @@ OPTIONS
                                       tagged registry - you must already be
                                       logged in.
     -n|--no-install                 Don't install the operator to a cluster.
+    -o |--overlay=DIR               When installing, use the kustomize overlay
+                                      present in DIR (as a subdirectory of
+                                      config) instead of the one in default.
     -c |--custom-resource=YAML      Specify the CR sample file to deploy from
                                       the config/samples directory.
     -d|--deploy-cr                  Deploy a CR for the operator to the cluster.
@@ -143,6 +146,7 @@ CR_SAMPLE=
 DEPLOY_CR=
 UNDEPLOY_CR=
 INSTALL=true
+OVERLAY=default
 
 # Load the configuration
 config=
@@ -184,6 +188,9 @@ while [ $# -gt 0 ]; do
             ;;
         -n|--no-install)
             INSTALL=
+            ;;
+        -o|--overlay=*)
+            OVERLAY=$(parse_arg -o "$1" "$2") || shift
             ;;
         -c|--custom-resource=*)
             CR_SAMPLE=$(parse_arg -c "$1" "$2") || shift
@@ -255,7 +262,7 @@ function install_operator() {
     if [ -z "$operator_installed" ]; then
         validate_cluster || return 1
         error_run "Installing operator resources" make install || return 1
-        error_run "Deploying operator" make deploy IMG=$IMG:latest || return 1
+        error_run "Deploying operator" make deploy IMG=$IMG:latest OVERLAY=$OVERLAY || return 1
     fi
     operator_installed=true
 }
@@ -265,14 +272,14 @@ function uninstall_operator() {
     #   logged in cluster
     validate_cluster || return 1
     undeploy_cr
-    warn_run "Undeploying operator" make undeploy IMG=$IMG:latest || :
+    warn_run "Undeploying operator" make undeploy IMG=$IMG:latest OVERLAY=$OVERLAY || :
     warn_run "Uninstalling operator resources" make uninstall || :
     operator_installed=
 }
 
 function remove_artifacts() {
     # Remove operator artifacts from the tree
-    warn_run "Removing operator files" rm -rf PROJECT Makefile Dockerfile bin config molecule roles/.placeholder playbooks/.placeholder || :
+    warn_run "Removing operator files" rm -rf PROJECT Makefile Dockerfile bin bundle bundle.Dockerfile config molecule roles/.placeholder playbooks/.placeholder || :
     artifacts_built=
 }
 
