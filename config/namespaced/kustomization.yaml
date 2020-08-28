@@ -4,10 +4,9 @@ kind: Kustomization
 namespace: sonarqube-operator-system
 namePrefix: sonarqube-operator-
 
-bases:
+patchesStrategicMerge:
+- namespace_scope_patch.yaml
+resources:
 - ../crd
 - ../rbac/namespaced
 - ../manager
-
-patchesStrategicMerge:
-- namespace_scope_patch.yaml
