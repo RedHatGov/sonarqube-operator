@@ -33,11 +33,11 @@ uninstall: kustomize
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/${OVERLAY} | kubectl apply -f -
+	$(KUSTOMIZE) build --load_restrictor none config/${OVERLAY} | kubectl apply -f -
 
 # Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
 undeploy: kustomize
-	$(KUSTOMIZE) build config/${OVERLAY} | kubectl delete -f -
+	$(KUSTOMIZE) build --load_restrictor none config/${OVERLAY} | kubectl delete -f -
 
 # Build the docker image
 docker-build:
