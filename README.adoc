@@ -35,9 +35,14 @@ hack/operate.sh
 +
 [source,sh]
 ----
-hack/operate.sh -d
+hack/operate.sh --deploy-cr
 ----
 
+. To install the operator with RBAC scoped to a specific namespace, deploying a Role and RoleBinding instead of a ClusterRole and ClusterRoleBinding:
++
+[source,sh]
+---
+hack/operate.sh --overlay=namespaced --namespace=mynamespace
 == Deploying a custom SonarQube instance using the Operator
 
 A SonarQube instance is deployed by creating a Custom Resource based on the sonarqube Custom Resource Definition.
@@ -119,7 +124,7 @@ In case you wish to uninstall the SonarQube Operator make sure that there are no
 +
 [source,sh]
 ----
-hack/operate.sh -r
+hack/operate.sh --remove
 ----
 
 == Notes on disconnected installations
