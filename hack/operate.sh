@@ -81,8 +81,8 @@ fi
 function print_usage() {
     wrap "usage: $(basename $0) [-h|--help] | [-r|--remove] [-v|--verbose] " \
          "[(-k |--kind=)KIND] [(-i |--image=)IMG] [-b|--build-artifacts] " \
-         "[-p|--push-images] [(-c | --custom-resource=)YAML] " \
-         "[-d|--deploy-cr] [-u|--undeploy-cr]"
+         "[-p|--push-images] [-n|--no-install] " \
+         "[(-c | --custom-resource=)YAML] [-d|--deploy-cr] [-u|--undeploy-cr]"
 }
 
 function print_help() {
@@ -109,6 +109,7 @@ OPTIONS
     -p|--push-images                Build and push new operator images to your
                                       tagged registry - you must already be
                                       logged in.
+    -n|--no-install                 Don't install the operator to a cluster.
     -c |--custom-resource=YAML      Specify the CR sample file to deploy from
                                       the config/samples directory.
     -d|--deploy-cr                  Deploy a CR for the operator to the cluster.
@@ -132,7 +133,7 @@ function parse_arg() {
     fi
 }
 
-# Unset defaults
+# Un/set defaults
 REMOVE_OPERATOR=
 IMG=
 KIND=
@@ -141,6 +142,7 @@ BUILD_ARTIFACTS=
 CR_SAMPLE=
 DEPLOY_CR=
 UNDEPLOY_CR=
+INSTALL=true
 
 # Load the configuration
 config=
@@ -179,6 +181,9 @@ while [ $# -gt 0 ]; do
             ;;
         -p|--push-images)
             PUSH_IMAGES=true
+            ;;
+        -n|--no-install)
+            INSTALL=
             ;;
         -c|--custom-resource=*)
             CR_SAMPLE=$(parse_arg -c "$1" "$2") || shift
@@ -296,8 +301,10 @@ else
         #   NOTE: REQUIRES YOU TO ACTUALLY LOG IN FIRST
         push_images
     fi
-    # Install all of the necessary artifacts
-    install_operator
+    if [ "$INSTALL" ]; then
+        # Install all of the necessary artifacts
+        install_operator
+    fi
     # Apply the artifacts to the currently logged in cluster
     if [ "$DEPLOY_CR" ]; then
         deploy_cr
