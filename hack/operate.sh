@@ -199,7 +199,7 @@ while [ $# -gt 0 ]; do
             OVERLAY=$(parse_arg -o "$1" "$2") || shift
             ;;
         -n|--namespace=*)
-            NAMESPACE=$(parse_arg -o "$1" "$2") || shift
+            NAMESPACE=$(parse_arg -n "$1" "$2") || shift
             ;;
         -c|--custom-resource=*)
             CR_SAMPLE=$(parse_arg -c "$1" "$2") || shift
