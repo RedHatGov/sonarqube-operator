@@ -32,6 +32,7 @@ function on_error() {
 
 # Generic exit cleanup helper
 function on_exit() {
+    unkustomize_namespace &>/dev/null
     rm -f $log
 }
 
@@ -81,8 +82,9 @@ fi
 function print_usage() {
     wrap "usage: $(basename $0) [-h|--help] | [-r|--remove] [-v|--verbose] " \
          "[(-k |--kind=)KIND] [(-i |--image=)IMG] [-b|--build-artifacts] " \
-         "[-p|--push-images] [-n|--no-install] [(-o |--overlay=)DIR]" \
-         "[(-c | --custom-resource=)YAML] [-d|--deploy-cr] [-u|--undeploy-cr]"
+         "[--build-only] [-p|--push-images] [(-o |--overlay=)DIR] " \
+         "[(-n |--namespace=)NS] [(-c | --custom-resource=)YAML] " \
+         "[-d|--deploy-cr] [-u|--undeploy-cr]"
 }
 
 function print_help() {
@@ -106,13 +108,15 @@ OPTIONS
                                       push, install, or deploy.
     -b|--build-artifacts            Rebuild deployment artifacts, removing them
                                       and rebuilding as necessary.
+    --build-only                    Build artifacts, but don't install them or
+                                      do any follow-on actions.
     -p|--push-images                Build and push new operator images to your
                                       tagged registry - you must already be
                                       logged in.
-    -n|--no-install                 Don't install the operator to a cluster.
     -o |--overlay=DIR               When installing, use the kustomize overlay
                                       present in DIR (as a subdirectory of
                                       config) instead of the one in default.
+    -n |--namespace=NS              Set the namespace to deploy the artifacts to
     -c |--custom-resource=YAML      Specify the CR sample file to deploy from
                                       the config/samples directory.
     -d|--deploy-cr                  Deploy a CR for the operator to the cluster.
@@ -142,10 +146,11 @@ IMG=
 KIND=
 PUSH_IMAGES=
 BUILD_ARTIFACTS=
+BUILD_ONLY=
+NAMESPACE=
 CR_SAMPLE=
 DEPLOY_CR=
 UNDEPLOY_CR=
-INSTALL=true
 OVERLAY=default
 
 # Load the configuration
@@ -183,14 +188,18 @@ while [ $# -gt 0 ]; do
         -b|--build-artifacts)
             BUILD_ARTIFACTS=true
             ;;
+        --build-only)
+            BUILD_ARTIFACTS=true
+            BUILD_ONLY=true
+            ;;
         -p|--push-images)
             PUSH_IMAGES=true
             ;;
-        -n|--no-install)
-            INSTALL=
-            ;;
         -o|--overlay=*)
             OVERLAY=$(parse_arg -o "$1" "$2") || shift
+            ;;
+        -n|--namespace=*)
+            NAMESPACE=$(parse_arg -o "$1" "$2") || shift
             ;;
         -c|--custom-resource=*)
             CR_SAMPLE=$(parse_arg -c "$1" "$2") || shift
@@ -214,6 +223,8 @@ components_updated=
 artifacts_built=
 operator_installed=
 cluster_validated=
+kustomize_validated=
+old_namespace=
 
 function update_components() {
     # Ensure we have the things we need to work with the operator-sdk
@@ -293,6 +304,31 @@ function undeploy_cr() {
     warn_run "Undeploying custom resource sample" kubectl delete -f "config/samples/${CR_SAMPLE}" ||:
 }
 
+function validate_kustomize() {
+    if [ -z "$kustomize_validated" ]; then
+        error_run "Validating kustomize is installed/downloaded" make kustomize || return 1
+        which kustomize &>/dev/null || function kustomize() { "$(pwd)/bin/kustomize" "${@}" ; }
+    fi
+    kustomize_validated=true
+}
+
+function kustomize_namespace() {
+    validate_kustomize || return 1
+    pushd config/$OVERLAY &>/dev/null
+    old_namespace=$(awk '/^namespace:/{print $2}')
+    error_run "Kustomizing namespace" kustomize edit set namespace "$NAMESPACE" || return 1
+    popd &>/dev/null
+}
+
+function unkustomize_namespace() {
+    if [ -z "$old_namespace" ]; then
+        return 0
+    fi
+    pushd config/$OVERLAY &>/dev/null
+    warn_run "Removing namespace kustomization" kustomize edit set namespace "$old_namespace" ||:
+    popd &>/dev/null
+}
+
 if [ "$REMOVE_OPERATOR" ]; then
     # Try to remove everything from a cluster
     uninstall_operator || :
@@ -302,16 +338,24 @@ else
         #   NOTE: Removes all existing tweaks to built artifacts!
         update_components
         build_artifacts
+        if [ "$BUILD_ONLY" ]; then
+            exit 0
+        fi
     fi
     if [ "$PUSH_IMAGES" ]; then
         # Push the images to a repository
         #   NOTE: REQUIRES YOU TO ACTUALLY LOG IN FIRST
         push_images
     fi
-    if [ "$INSTALL" ]; then
-        # Install all of the necessary artifacts
-        install_operator
+
+    if [ "$NAMESPACE" ]; then
+        # Ensure kustomize is available and kustomize the namespace
+        kustomize_namespace
     fi
+
+    # Install all of the necessary artifacts
+    install_operator
+
     # Apply the artifacts to the currently logged in cluster
     if [ "$DEPLOY_CR" ]; then
         deploy_cr
