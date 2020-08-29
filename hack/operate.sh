@@ -82,9 +82,9 @@ fi
 function print_usage() {
     wrap "usage: $(basename $0) [-h|--help] | [-r|--remove] [-v|--verbose] " \
          "[(-k |--kind=)KIND] [(-i |--image=)IMG] [-b|--build-artifacts] " \
-         "[--build-only] [-p|--push-images] [(-o |--overlay=)DIR] " \
-         "[(-n |--namespace=)NS] [(-c | --custom-resource=)YAML] " \
-         "[-d|--deploy-cr] [-u|--undeploy-cr]"
+         "[--build-only] [-p|--push-images] [--push-only] " \
+         "[(-o |--overlay=)DIR] [(-n |--namespace=)NS] " \
+         "[(-c | --custom-resource=)YAML] [-d|--deploy-cr] [-u|--undeploy-cr]"
 }
 
 function print_help() {
@@ -113,6 +113,9 @@ OPTIONS
     -p|--push-images                Build and push new operator images to your
                                       tagged registry - you must already be
                                       logged in.
+    --push-only                     Build and push new operator images to your
+                                      tagged repository, but don't do any
+                                      follow-on actions.
     -o |--overlay=DIR               When installing, use the kustomize overlay
                                       present in DIR (as a subdirectory of
                                       config) instead of the one in default.
@@ -145,6 +148,7 @@ REMOVE_OPERATOR=
 IMG=
 KIND=
 PUSH_IMAGES=
+PUSH_ONLY=
 BUILD_ARTIFACTS=
 BUILD_ONLY=
 NAMESPACE=
@@ -195,6 +199,10 @@ while [ $# -gt 0 ]; do
         -p|--push-images)
             PUSH_IMAGES=true
             ;;
+        --push-only)
+            PUSH_IMAGES=true
+            PUSH_ONLY=true
+            ;;
         -o|--overlay=*)
             OVERLAY=$(parse_arg -o "$1" "$2") || shift
             ;;
@@ -218,6 +226,12 @@ while [ $# -gt 0 ]; do
             ;;
     esac ; shift
 done
+
+if [ -n "$BUILD_ONLY" -a -n "$PUSH_ONLY" ]; then
+    echo "Unable to build and push only" >&2
+    print_usage >&2
+    exit 1
+fi
 
 components_updated=
 artifacts_built=
@@ -346,6 +360,9 @@ else
         # Push the images to a repository
         #   NOTE: REQUIRES YOU TO ACTUALLY LOG IN FIRST
         push_images
+        if [ "$PUSH_ONLY" ]; then
+            exit 0
+        fi
     fi
 
     if [ "$NAMESPACE" ]; then
