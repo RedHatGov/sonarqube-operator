@@ -1,7 +1,7 @@
 apiVersion: redhatgov.io/v1alpha1
 kind: Sonarqube
 metadata:
-  name: sonarqube-sample
+  name: sonarqube-testing
 spec:
   postgresql:
     image:
