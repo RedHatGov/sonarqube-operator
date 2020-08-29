@@ -5,3 +5,5 @@ tags
 .quay_creds
 bin
 .placeholder
+bundle
+bundle.Dockerfile

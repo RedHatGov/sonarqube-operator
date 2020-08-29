@@ -80,16 +80,28 @@ else
 fi
 
 function print_usage() {
-    wrap "usage: $(basename $0) [-h|--help] | [-r|--remove] [-v|--verbose] " \
-         "[(-k |--kind=)KIND] [(-i |--image=)IMG] [-b|--build-artifacts] " \
-         "[--build-only] [-p|--push-images] [--push-only] " \
-         "[(-o |--overlay=)DIR] [(-n |--namespace=)NS] " \
-         "[(-c | --custom-resource=)YAML] [-d|--deploy-cr] [-u|--undeploy-cr]"
+    wrap "usage: $(basename $0) [-h|--help] | " \
+         "[-r|--remove] " \
+         "[-v|--verbose] " \
+         "[(-k |--kind=)KIND] " \
+         "[(-i |--image=)IMG] " \
+         "[-b|--build-artifacts] " \
+         "[--build-only] " \
+         "[-p|--push-images] " \
+         "[--push-only] " \
+         "[(-o |--overlay=)DIR] " \
+         "[(-n |--namespace=)NS] " \
+         "[(-c | --custom-resource=)YAML] " \
+         "[-d|--deploy-cr] " \
+         "[-u|--undeploy-cr] " \
+         "[(-V |--version=)SEMVER] " \
+         "[(-C |--channels=)CHANNELS] " \
+         "[--bundle]"
 }
 
 function print_help() {
     print_usage
-    cat << EOF
+    cat << 'EOF'
 
 Build an ansible-based operator using only requirements.yml, watches.yml, and
 the requisite playbooks/ and roles/ files on the fly. Can complete any and all
@@ -124,6 +136,15 @@ OPTIONS
                                       the config/samples directory.
     -d|--deploy-cr                  Deploy a CR for the operator to the cluster.
     -u|--undeploy-cr                Undeploy the CR for the operator.
+    -V |--version=SEMVER            Set the operator version to SEMVER for the
+                                      purpose of building an OLM bundle.
+    -C |--channels=CHANNELS         Set the channels label for the bundle image.
+    --bundle                        Build and publish an OLM bundle to the tag
+                                      at ${IMG}-bundle:${SEMVER}
+
+NOTE: If you run with `--push-images` and `--bundle`, no installation will be
+      attempted as this combination is intended for CI. Other options will still
+      be processed.
 
 EOF
 }
@@ -156,6 +177,9 @@ CR_SAMPLE=
 DEPLOY_CR=
 UNDEPLOY_CR=
 OVERLAY=default
+VERSION=
+CHANNELS=
+BUNDLE=
 
 # Load the configuration
 config=
@@ -220,6 +244,15 @@ while [ $# -gt 0 ]; do
             UNDEPLOY_CR=true
             DEPLOY_CR=
             ;;
+        -V|--version=*)
+            VERSION=$(parse_arg -V "$1" "$2") || shift
+            ;;
+        -C|--channels=*)
+            CHANNELS=$(parse_arg -C "$1" "$2") || shift
+            ;;
+        --bundle)
+            BUNDLE=true
+            ;;
         *)
             print_usage >&2
             exit 127
@@ -233,6 +266,7 @@ if [ -n "$BUILD_ONLY" -a -n "$PUSH_ONLY" ]; then
     exit 1
 fi
 
+quay_logged_in=
 components_updated=
 artifacts_built=
 operator_installed=
@@ -261,11 +295,20 @@ function build_artifacts() {
     artifacts_built=true
 }
 
-function push_images() {
-    # Push the images to the logged in repository
-    if [ -n "$QUAY_USER" -a -n "$QUAY_PASSWORD" ]; then
-        docker login -u "$QUAY_USER" -p "$QUAY_PASSWORD" quay.io || return 1
+function quay_login() {
+    if [ -z "$quay_logged_in" ]; then
+        if [ -n "$QUAY_USER" -a -n "$QUAY_PASSWORD" ]; then
+            error_run "Logging in to quay.io with provided credentials" docker login -u "$QUAY_USER" -p "$QUAY_PASSWORD" quay.io || return 1
+        else
+            warn_run "No credentials provided, assuming cached login..." false ||:
+        fi
     fi
+    quay_logged_in=true
+}
+
+function push_images() {
+    quay_login || return 1
+    # Push the images to the logged in repository
     for tag in $version latest; do
         error_run "Building $IMG:$tag" make docker-build IMG=$IMG:$tag || return 1
         error_run "Pushing $IMG:$tag" make docker-push IMG=$IMG:$tag || return 1
@@ -343,6 +386,20 @@ function unkustomize_namespace() {
     popd &>/dev/null
 }
 
+function publish_bundle() {
+    update_components || return 1
+    validate_kustomize || return 1
+    quay_login || return 1
+    rm -rf bundle bundle.Dockerfile
+    error_run "Building bundle manifests" 'kustomize build --load_restrictor none config/manifests | operator-sdk generate bundle --overwrite --version $VERSION --channels "$CHANNELS"' || return 1
+    error_run "Validating bundle" operator-sdk bundle validate ./bundle || return 1
+    error_run "Building bundle image" docker build -f bundle.Dockerfile -t "$IMG-bundle:$VERSION" || return 1
+    error_run "Tagging bundle image with latest" docker tag "$IMG-bundle:$VERSION" "$IMG-bundle:latest" || return 1
+    for image in "$IMG-bundle:$VERSION" "$IMG-bundle:latest"; do
+        error_run "Pushing image $image" docker push "$image" || return 1
+    done
+}
+
 if [ "$REMOVE_OPERATOR" ]; then
     # Try to remove everything from a cluster
     uninstall_operator || :
@@ -370,13 +427,19 @@ else
         kustomize_namespace
     fi
 
-    # Install all of the necessary artifacts
-    install_operator
+    if [ -z "$PUSH_IMAGES" -o -z "$BUNDLE" ]; then
+        # Install all of the necessary artifacts
+        install_operator
+    fi
 
     # Apply the artifacts to the currently logged in cluster
     if [ "$DEPLOY_CR" ]; then
         deploy_cr
     elif [ "$UNDEPLOY_CR" ]; then
         undeploy_cr
+    fi
+
+    if [ "$BUNDLE" ]; then
+        publish_bundle
     fi
 fi
