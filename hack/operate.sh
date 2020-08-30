@@ -59,32 +59,39 @@ if which formatter &>/dev/null; then
     #   echo "$PATH" | grep -qF "$(realpath ~/.local/bin)" || export PATH="$(realpath ~/.local/bin):$PATH"
     . $(which formatter)
 else
-    # These will work as a poor-man's approximation in just a few lines
-    function error_run() {
-        echo -n "$1"
-        shift
-        eval "$@" >&7 2>&1 && echo '  [ SUCCESS ]' || { ret=$? ; echo '  [  ERROR  ]' ; return $ret ; }
-    }
-    function warn_run() {
-        echo -n "$1"
-        shift
-        eval "$@" >&7 2>&1 && echo '  [ SUCCESS ]' || { ret=$? ; echo '  [ WARNING ]' ; return $ret ; }
-    }
-    function wrap() {
-        if [ $# -gt 0 ]; then
-            echo "${@}" | fold -s
-        else
-            fold -s
-        fi
-    }
+    if echo "$*" | grep -qF -- '--formatter'; then
+        curl -o ~/.local/bin/formatter https://raw.githubusercontent.com/solacelost/output-formatter/modern-only/formatter
+        chmod +x ~/.local/bin/formatter
+        . ~/.local/bin/formatter
+    else
+        # These will work as a poor-man's approximation in just a few lines
+        function error_run() {
+            echo -n "$1"
+            shift
+            eval "$@" >&7 2>&1 && echo '  [ SUCCESS ]' || { ret=$? ; echo '  [  ERROR  ]' ; return $ret ; }
+        }
+        function warn_run() {
+            echo -n "$1"
+            shift
+            eval "$@" >&7 2>&1 && echo '  [ SUCCESS ]' || { ret=$? ; echo '  [ WARNING ]' ; return $ret ; }
+        }
+        function wrap() {
+            if [ $# -gt 0 ]; then
+                echo "${@}" | fold -s
+            else
+                fold -s
+            fi
+        }
+    fi
 fi
 
 function print_usage() {
     wrap "usage: $(basename $0) [-h|--help] | " \
-         "[-r|--remove] " \
+         "[--formatter] " \
          "[-v|--verbose] " \
-         "[(-k |--kind=)KIND] " \
          "[(-i |--image=)IMG] " \
+         "[(-k |--kind=)KIND] " \
+         "[-r|--remove] " \
          "[-b|--build-artifacts] " \
          "[--build-only] " \
          "[-p|--push-images] " \
@@ -111,6 +118,8 @@ available as well.
 
 OPTIONS
     -h|--help                       Print this help page and exit.
+    --formatter                     Download and use the pretty-printing
+                                      formatter to execute task runs.
     -v|--verbose                    Output all command output directly to
                                       stderr, making it ugly but debuggable.
     -i |--image=IMG                 Set the image name for the operator to IMG
@@ -201,11 +210,14 @@ while [ $# -gt 0 ]; do
             print_help
             exit 0
             ;;
-        -r|--remove)
-            REMOVE_OPERATOR=true
+        --formatter)
+            true
             ;;
         -v|--verbose)
             true
+            ;;
+        -r|--remove)
+            REMOVE_OPERATOR=true
             ;;
         -i|--image=*)
             IMG=$(parse_arg -i "$1" "$2") || shift
@@ -298,7 +310,7 @@ function build_artifacts() {
 function quay_login() {
     if [ -z "$quay_logged_in" ]; then
         if [ -n "$QUAY_USER" -a -n "$QUAY_PASSWORD" ]; then
-            error_run "Logging in to quay.io with provided credentials" docker login -u "$QUAY_USER" -p "$QUAY_PASSWORD" quay.io || return 1
+            error_run "Logging in to quay.io with provided credentials" "docker login -u '$QUAY_USER' -p '$QUAY_PASSWORD' quay.io" || return 1
         else
             warn_run "No credentials provided, assuming cached login..." false ||:
         fi
@@ -393,7 +405,7 @@ function publish_bundle() {
     rm -rf bundle bundle.Dockerfile
     error_run "Building bundle manifests" 'kustomize build --load_restrictor none config/manifests | operator-sdk generate bundle --overwrite --version $VERSION --channels "$CHANNELS"' || return 1
     error_run "Validating bundle" operator-sdk bundle validate ./bundle || return 1
-    error_run "Building bundle image" docker build -f bundle.Dockerfile -t "$IMG-bundle:$VERSION" || return 1
+    error_run "Building bundle image" docker build -f bundle.Dockerfile -t "$IMG-bundle:$VERSION" . || return 1
     error_run "Tagging bundle image with latest" docker tag "$IMG-bundle:$VERSION" "$IMG-bundle:latest" || return 1
     for image in "$IMG-bundle:$VERSION" "$IMG-bundle:latest"; do
         error_run "Pushing image $image" docker push "$image" || return 1
