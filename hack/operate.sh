@@ -407,6 +407,10 @@ function publish_bundle() {
     validate_kustomize || return 1
     quay_login || return 1
     rm -rf bundle bundle.Dockerfile
+    pushd config/rbac &>/dev/null
+    error_run "Adding namespaced Role to kustomization" 'kustomize edit add resource namespaced/role.yaml' || return 1
+    error_run "Adding namespaced RoleBinding to kustomization" 'kustomize edit add resource namespaced/role_binding.yaml' || return 1
+    popd &>/dev/null
     error_run "Building bundle manifests" 'kustomize build --load_restrictor none config/manifests | operator-sdk generate bundle --overwrite --version $VERSION --channels "$CHANNELS"' || return 1
     error_run "Validating bundle" operator-sdk bundle validate ./bundle || return 1
     error_run "Building bundle image" docker build -f bundle.Dockerfile -t "$IMG-bundle:$VERSION" . || return 1
@@ -414,6 +418,10 @@ function publish_bundle() {
     for image in "$IMG-bundle:$VERSION" "$IMG-bundle:latest"; do
         error_run "Pushing image $image" docker push "$image" || return 1
     done
+    pushd config/rbac &>/dev/null
+    warn_run "Removing namespaced Role from kustomization" 'kustomize edit remove resource namespaced/role.yaml' ||:
+    warn_run "Removing namespaced RoleBinding from kustomization" 'kustomize edit remove resource namespaced/role.yaml' ||:
+    popd &>/dev/null
 }
 
 if [ "$REMOVE_OPERATOR" ]; then
