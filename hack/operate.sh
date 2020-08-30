@@ -380,7 +380,8 @@ function undeploy_cr() {
 function validate_kustomize() {
     if [ -z "$kustomize_validated" ]; then
         error_run "Validating kustomize is installed/downloaded" make kustomize || return 1
-        which kustomize &>/dev/null || function kustomize() { "$(pwd)/bin/kustomize" "${@}" ; }
+        project_root=$(pwd)
+        which kustomize &>/dev/null || function kustomize() { "${project_root}/bin/kustomize" "${@}" ; }
     fi
     kustomize_validated=true
 }
