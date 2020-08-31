@@ -24,6 +24,6 @@ script:
 - KUSTOMIZE_PATH=${KUSTOMIZE} TEST_OPERATOR_NAMESPACE=default molecule test -s kind-namespace
 deploy:
   provider: script
-  script: hack/operate.sh --push-images --verbose
+  script: hack/operate.sh --push-only --verbose
   on:
     branch: master

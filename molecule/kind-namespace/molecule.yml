@@ -13,8 +13,11 @@ platforms:
 provisioner:
   name: ansible
   playbooks:
+    create: ../kind-cluster/create.yml
     prepare: ../default/prepare.yml
+    converge: ../kind-cluster/converge.yml
     verify: ../default/verify.yml
+    destroy: ../kind-cluster/destroy.yml
   lint: |
     set -e
     ansible-lint
