@@ -23,7 +23,11 @@ script:
 - KUSTOMIZE_PATH=${KUSTOMIZE} TEST_OPERATOR_NAMESPACE=default molecule test -s kind-cluster
 - KUSTOMIZE_PATH=${KUSTOMIZE} TEST_OPERATOR_NAMESPACE=default molecule test -s kind-namespace
 deploy:
-  provider: script
-  script: hack/operate.sh --push-images --bundle --verbose --formatter
+- provider: script
+  script: hack/operate.sh --push-images --bundle --extra-tag=develop --verbose --formatter
   on:
     branch: develop
+- provider: script
+  script: hack/operate.sh --push-images --bundle --extra-tag=latest --verbose --formatter
+  on:
+    branch: release

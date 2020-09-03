@@ -103,6 +103,7 @@ function print_usage() {
          "[-u|--undeploy-cr] " \
          "[(-V |--version=)SEMVER] " \
          "[(-C |--channels=)CHANNELS] " \
+         "[(-t |--extra-tag=)TAG] " \
          "[--bundle]"
 }
 
@@ -146,8 +147,11 @@ OPTIONS
     -d|--deploy-cr                  Deploy a CR for the operator to the cluster.
     -u|--undeploy-cr                Undeploy the CR for the operator.
     -V |--version=SEMVER            Set the operator version to SEMVER for the
-                                      purpose of building an OLM bundle.
+                                      purpose of building an operator image and
+                                      an OLM bundle.
     -C |--channels=CHANNELS         Set the channels label for the bundle image.
+    -t |--extra-tag=TAG             As well as SEMVER, also publish a version
+                                      tagged as TAG.
     --bundle                        Build and publish an OLM bundle to the tag
                                       at ${IMG}-bundle:${SEMVER}
 
@@ -189,6 +193,7 @@ OVERLAY=default
 VERSION=
 CHANNELS=
 BUNDLE=
+EXTRA_TAGS=()
 
 # Load the configuration
 config=
@@ -262,6 +267,9 @@ while [ $# -gt 0 ]; do
         -C|--channels=*)
             CHANNELS=$(parse_arg -C "$1" "$2") || shift
             ;;
+        -t|--extra-tag=*)
+            EXTRA_TAGS+=($(parse_arg -t "$1" "$2")) || shift
+            ;;
         --bundle)
             BUNDLE=true
             ;;
@@ -294,7 +302,7 @@ function update_components() {
         else
             error_run "Updating the Operator SDK manager" pip install --user --upgrade git+https://git.jharmison.com/jharmison/operator-sdk-manager.git || return 1
         fi
-        error_run "Updating the Operator SDK" 'version=$(operator-sdk-manager update -vvvv | cut -d" " -f 3)' || return 1
+        error_run "Updating the Operator SDK" 'sdk_version=$(operator-sdk-manager update -vvvv | cut -d" " -f 3)' || return 1
     fi
     components_updated=true
 }
@@ -305,8 +313,8 @@ function build_artifacts() {
         if [ -d config ]; then
             remove_artifacts
         fi
-        error_run "Initializing Ansible Operator with operator-sdk $version" operator-sdk init --plugins=ansible --domain=io || return 1
-        error_run "Creating API config with operator-sdk $version" operator-sdk create api --group redhatgov --version v1alpha1 --kind $KIND || return 1
+        error_run "Initializing Ansible Operator with operator-sdk $sdk_version" operator-sdk init --plugins=ansible --domain=io || return 1
+        error_run "Creating API config with operator-sdk $sdk_version" operator-sdk create api --group redhatgov --version v1alpha1 --kind $KIND || return 1
     fi
     artifacts_built=true
 }
@@ -325,7 +333,7 @@ function quay_login() {
 function push_images() {
     quay_login || return 1
     # Push the images to the logged in repository
-    for tag in $version latest; do
+    for tag in $VERSION ${EXTRA_TAGS[@]}; do
         error_run "Building $IMG:$tag" make docker-build IMG=$IMG:$tag || return 1
         error_run "Pushing $IMG:$tag" make docker-push IMG=$IMG:$tag || return 1
     done
@@ -415,9 +423,10 @@ function publish_bundle() {
     error_run "Building bundle manifests" 'kustomize build --load_restrictor none config/manifests | operator-sdk generate bundle --overwrite --version $VERSION --channels "$CHANNELS"' || return 1
     error_run "Validating bundle" operator-sdk bundle validate ./bundle || return 1
     error_run "Building bundle image" docker build -f bundle.Dockerfile -t "$IMG-bundle:$VERSION" . || return 1
-    error_run "Tagging bundle image with latest" docker tag "$IMG-bundle:$VERSION" "$IMG-bundle:latest" || return 1
-    for image in "$IMG-bundle:$VERSION" "$IMG-bundle:latest"; do
-        error_run "Pushing image $image" docker push "$image" || return 1
+    error_run "Pushing image $IMG-bundle:$VERSION" docker push "$IMG-bundle:$VERSION" || return 1
+    for tag in ${EXTRA_TAGS[@]}; do
+        error_run "Tagging bundle image with $tag" docker tag "$IMG-bundle:$VERSION" "$IMG-bundle:$tag" || return 1
+        error_run "Pushing image $IMG-bundle:$tag" docker push "$IMG-bundle:$tag" || return 1
     done
     pushd config/rbac &>/dev/null
     warn_run "Removing namespaced Role from kustomization" 'kustomize edit remove resource namespaced/role.yaml' ||:
