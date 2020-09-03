@@ -50,5 +50,5 @@
 
       _sonarqube_memory_request: "{{ sonarqube.resources.memory.request | default('2Gi') }}"
       _sonarqube_memory_limit: "{{ sonarqube.resources.memory.limit | default('3Gi') }}"
-      _sonarqube_cpu_request: "{{ sonarqube.resources.cpu.request | default(1) }}"
-      _sonarqube_cpu_limit: "{{ sonarqube.resources.cpu.limit | default(2) }}"
+      _sonarqube_cpu_request: "{{ sonarqube.resources.cpu.request | default('1') }}"
+      _sonarqube_cpu_limit: "{{ sonarqube.resources.cpu.limit | default('2') }}"
