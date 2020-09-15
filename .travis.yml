@@ -30,4 +30,4 @@ deploy:
 - provider: script
   script: hack/operate.sh --push-images --bundle --extra-tag=latest --verbose --formatter
   on:
-    branch: release
+    branch: main
