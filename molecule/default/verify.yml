@@ -32,13 +32,20 @@
               kind: ConfigMap
           register: debug_resources
 
-        - name: Retrieve Pod logs
+        - name: Retrieve controller Pod logs
           k8s_log:
             name: '{{ item.metadata.name }}'
             namespace: '{{ namespace }}'
             container: manager
           loop: "{{ q('k8s', api_version='v1', kind='Pod', namespace=namespace, label_selector=ctrl_label) }}"
-          register: debug_logs
+          register: debug_controller_logs
+
+        - name: Retrieve application Pod logs
+          k8s_log:
+            name: '{{ item.metadata.name }}'
+            namespace: '{{ namespace }}'
+          loop: "{{ q('k8s', api_version='v1', kind='Pod', namespace=namespace, label_selector='app=sonarqube-testing') }}"
+          register: debug_app_logs
 
         - name: Output gathered resources
           debug:
@@ -47,7 +54,7 @@
         - name: Output gathered logs
           debug:
             var: item.log_lines
-          loop: '{{ debug_logs.results }}'
+          loop: '{{ debug_controller_logs.results + debug_app_logs.results }}'
 
         - name: Re-emit failure
           vars:
