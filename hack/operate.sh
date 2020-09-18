@@ -153,7 +153,7 @@ OPTIONS
     -t |--extra-tag=TAG             As well as SEMVER, also publish a version
                                       tagged as TAG.
     --bundle                        Build and publish an OLM bundle to the tag
-                                      at ${IMG}-bundle:${SEMVER}
+                                      at ${IMG}-bundle:${VERSION}
 
 NOTE: If you run with `--push-images` and `--bundle`, no installation will be
       attempted as this combination is intended for CI. Other options will still
