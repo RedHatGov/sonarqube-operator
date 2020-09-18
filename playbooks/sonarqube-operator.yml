@@ -20,7 +20,7 @@
       _postgresql_password: sonar
 
       _postgresql_persistent: "{{ persistent | default(True) }}"
-      _postgresql_volume_size: "{{ postgresql.volumeSize | default('1Gi') }}"
+      _postgresql_volume_size: "{{ postgresql.volume_size | default('1Gi') }}"
 
       _postgresql_image: "{{ postgresql.image.src | default('registry.redhat.io/rhel8/postgresql-10') }}"
       _postgresql_image_tag: "{{ postgresql.image.tag | default('latest') }}"
@@ -38,10 +38,10 @@
 
       _sonarqube_image: "{{ sonarqube.image.src | default('quay.io/redhatgov/sonarqube') }}"
       _sonarqube_image_tag: "{{ sonarqube.image.tag | default('latest') }}"
-      _sonarqube_image_pull_policy: "{{ sonarqube.image.pullPolicy | default('IfNotPresent') }}"
+      _sonarqube_image_pull_policy: "{{ sonarqube.image.pull_policy | default('IfNotPresent') }}"
 
       _sonarqube_persistent: "{{ persistent | default(True) }}"
-      _sonarqube_volume_size: "{{ sonarqube.volumeSize | default('1Gi') }}"
+      _sonarqube_volume_size: "{{ sonarqube.volume_size | default('1Gi') }}"
 
       _sonarqube_postgresql_service_name: "postgresql-{{ ansible_operator_meta.name }}"
       _sonarqube_postgresql_database_name: sonardb
