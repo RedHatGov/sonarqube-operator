@@ -298,9 +298,9 @@ function update_components() {
     # Ensure we have the things we need to work with the operator-sdk
     if [ -z "$components_updated" ]; then
         if [ "$VIRTUAL_ENV" ]; then
-            error_run "Updating the Operator SDK manager" pip install --upgrade git+https://git.jharmison.com/jharmison/operator-sdk-manager.git || return 1
+            error_run "Updating the Operator SDK manager" pip install --upgrade operator-sdk-manager || return 1
         else
-            error_run "Updating the Operator SDK manager" pip install --user --upgrade git+https://git.jharmison.com/jharmison/operator-sdk-manager.git || return 1
+            error_run "Updating the Operator SDK manager" pip install --user --upgrade operator-sdk-manager || return 1
         fi
         error_run "Updating the Operator SDK" 'sdk_version=$(operator-sdk-manager update -vvvv | cut -d" " -f 3)' || return 1
     fi
