@@ -345,7 +345,6 @@ function push_images() {
         for tag in $VERSION ${EXTRA_TAGS[@]}; do
             error_run "Building $IMG:$tag" make docker-build IMG=$IMG:$tag || return 1
             error_run "Pushing $IMG:$tag" make docker-push IMG=$IMG:$tag || return 1
-            fi
         done
     else
         error_run "Building $IMG:develop" make docker-build IMG=$IMG:develop || return 1
