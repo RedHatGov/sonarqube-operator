@@ -104,6 +104,7 @@ function print_usage() {
          "[(-V |--version=)SEMVER] " \
          "[(-C |--channels=)CHANNELS] " \
          "[(-t |--extra-tag=)TAG] " \
+         "[--develop] " \
          "[--bundle]"
 }
 
@@ -152,8 +153,11 @@ OPTIONS
     -C |--channels=CHANNELS         Set the channels label for the bundle image.
     -t |--extra-tag=TAG             As well as SEMVER, also publish a version
                                       tagged as TAG.
+    --develop                       Don't push to the SEMVER tag, either from
+                                      operate.conf or the --version option, and
+                                      instead push only to the develop tag
     --bundle                        Build and publish an OLM bundle to the tag
-                                      at ${IMG}-bundle:${SEMVER}
+                                      at ${IMG}-bundle:${VERSION}
 
 NOTE: If you run with `--push-images` and `--bundle`, no installation will be
       attempted as this combination is intended for CI. Other options will still
@@ -192,6 +196,7 @@ UNDEPLOY_CR=
 OVERLAY=default
 VERSION=
 CHANNELS=
+DEVLEOP=
 BUNDLE=
 EXTRA_TAGS=()
 
@@ -270,6 +275,9 @@ while [ $# -gt 0 ]; do
         -t|--extra-tag=*)
             EXTRA_TAGS+=($(parse_arg -t "$1" "$2")) || shift
             ;;
+        --develop)
+            DEVELOP=true
+            ;;
         --bundle)
             BUNDLE=true
             ;;
@@ -298,9 +306,9 @@ function update_components() {
     # Ensure we have the things we need to work with the operator-sdk
     if [ -z "$components_updated" ]; then
         if [ "$VIRTUAL_ENV" ]; then
-            error_run "Updating the Operator SDK manager" pip install --upgrade git+https://git.jharmison.com/jharmison/operator-sdk-manager.git || return 1
+            error_run "Updating the Operator SDK manager" pip install --upgrade operator-sdk-manager || return 1
         else
-            error_run "Updating the Operator SDK manager" pip install --user --upgrade git+https://git.jharmison.com/jharmison/operator-sdk-manager.git || return 1
+            error_run "Updating the Operator SDK manager" pip install --user --upgrade operator-sdk-manager || return 1
         fi
         error_run "Updating the Operator SDK" 'sdk_version=$(operator-sdk-manager update -vvvv | cut -d" " -f 3)' || return 1
     fi
@@ -333,10 +341,15 @@ function quay_login() {
 function push_images() {
     quay_login || return 1
     # Push the images to the logged in repository
-    for tag in $VERSION ${EXTRA_TAGS[@]}; do
-        error_run "Building $IMG:$tag" make docker-build IMG=$IMG:$tag || return 1
-        error_run "Pushing $IMG:$tag" make docker-push IMG=$IMG:$tag || return 1
-    done
+    if [ -z "$DEVELOP" ]; then
+        for tag in $VERSION ${EXTRA_TAGS[@]}; do
+            error_run "Building $IMG:$tag" make docker-build IMG=$IMG:$tag || return 1
+            error_run "Pushing $IMG:$tag" make docker-push IMG=$IMG:$tag || return 1
+        done
+    else
+        error_run "Building $IMG:develop" make docker-build IMG=$IMG:develop || return 1
+        error_run "Pushing $IMG:develop" make docker-push IMG=$IMG:develop || return 1
+    fi
 }
 
 function validate_cluster() {
@@ -423,11 +436,16 @@ function publish_bundle() {
     error_run "Building bundle manifests" 'kustomize build --load_restrictor none config/manifests | operator-sdk generate bundle --overwrite --version $VERSION --channels "$CHANNELS"' || return 1
     error_run "Validating bundle" operator-sdk bundle validate ./bundle || return 1
     error_run "Building bundle image" docker build -f bundle.Dockerfile -t "$IMG-bundle:$VERSION" . || return 1
-    error_run "Pushing image $IMG-bundle:$VERSION" docker push "$IMG-bundle:$VERSION" || return 1
-    for tag in ${EXTRA_TAGS[@]}; do
-        error_run "Tagging bundle image with $tag" docker tag "$IMG-bundle:$VERSION" "$IMG-bundle:$tag" || return 1
-        error_run "Pushing image $IMG-bundle:$tag" docker push "$IMG-bundle:$tag" || return 1
-    done
+    if [ -z "$DEVELOP" ]; then
+        error_run "Pushing image $IMG-bundle:$VERSION" docker push "$IMG-bundle:$VERSION" || return 1
+        for tag in ${EXTRA_TAGS[@]}; do
+            error_run "Tagging bundle image with $tag" docker tag "$IMG-bundle:$VERSION" "$IMG-bundle:$tag" || return 1
+            error_run "Pushing image $IMG-bundle:$tag" docker push "$IMG-bundle:$tag" || return 1
+        done
+    else
+        error_run "Tagging bundle image with develop" docker tag "$IMG-bundle:$VERSION" "$IMG-bundle:develop" || return 1
+        error_run "Pushing image $IMG-bundle:develop" docker push "$IMG-bundle:develop" || return 1
+    fi
     pushd config/rbac &>/dev/null
     warn_run "Removing namespaced Role from kustomization" 'kustomize edit remove resource namespaced/role.yaml' ||:
     warn_run "Removing namespaced RoleBinding from kustomization" 'kustomize edit remove resource namespaced/role.yaml' ||:
