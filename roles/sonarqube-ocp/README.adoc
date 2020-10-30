@@ -26,7 +26,7 @@ This role also requires a PostgreSQL Database to be running in the same Namespac
 |_sonarqube_cpu_limit               |2                            |No           |Maximum CPU Requirement
 |_sonarqube_wait_for_init           |True                         |No           |Wait for the database pod to be running and ready
 |_sonarqube_image                   |quay.io/redhatgov/sonarqube  |No           |Container image for Sonarqube
-|_sonarqube_image_tag               |latest                       |No           |Tag for Sonarqube container image
+|_sonarqube_image_tag               |8.3.1.34397                  |No           |Tag for Sonarqube container image
 |_sonarqube_image_pull_policy       |IfNotPresent                 |No           |pullPolicy for Sonarqube container image
 |_sonarqube_expose_method           |Route                        |No           |Options include `Route`, `Ingress`, and `None`
 |_sonarqube_expose_uri              |""                           |No           |The URI to expose via Route/Ingress.
