@@ -104,7 +104,7 @@ If you are using a `registries.conf` change and/or ImageContentSourcePolicy mirr
 To change the image sources for all necessary images to deploy the operator without such a policy, you need to have the following images hosted in a container repository on your disconnected network:
 
 . quay.io/redhatgov/sonarqube-operator:latest
-. quay.io/redhatgov/sonarqube:latest
+. quay.io/redhatgov/sonarqube:8.3.1.34397
 . Some PostgreSQL 10 image that either behaves like the Red Hat PostgreSQL 10 RHEL 8 image or the docker.io/library/postgres:10 image.
 
 The places where you must update those sources are then, respectively:

@@ -78,7 +78,7 @@ spec:
                       tag:
                         description: Defines the specific tag to use for the Sonarqube image
                         type: string
-                        default: latest
+                        default: "8.3.1.34397"
                       pullPolicy:
                         description: |
                           Defines the pullPolicy that should be applied to the image on the Deployment resource
