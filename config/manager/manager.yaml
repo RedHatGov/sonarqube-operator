@@ -34,3 +34,4 @@ spec:
               fieldRef:
                 fieldPath: metadata.annotations['olm.targetNamespaces']
       terminationGracePeriodSeconds: 10
+      serviceAccountName: sa
