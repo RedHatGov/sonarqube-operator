@@ -26,9 +26,9 @@ jobs:
           name: osdk-test
           version: v0.9.0
       - name: Prereq setup
-        run: hack/ci-setup.sh
+        run: develop/ci-setup.sh
       - name: Test
-        run: hack/ci-test.sh kind-cluster
+        run: develop/ci-test.sh kind-cluster
 
   test-namespace:
     runs-on: ubuntu-latest
@@ -44,9 +44,9 @@ jobs:
           name: osdk-test
           version: v0.9.0
       - name: Prereq setup
-        run: hack/ci-setup.sh
+        run: develop/ci-setup.sh
       - name: Test
-        run: hack/ci-test.sh kind-namespace
+        run: develop/ci-test.sh kind-namespace
 
   release:
     needs: [test-cluster, test-namespace]
@@ -69,10 +69,10 @@ jobs:
       - name: Build, bundle, and push (develop)
         run: |
           pip3 install --user --upgrade setuptools wheel pip
-          hack/operate.sh --push-images --bundle --develop --verbose --formatter
+          develop/operate.sh --push-images --bundle --develop --verbose --formatter
         if: github.ref == 'refs/heads/develop'
       - name: Build, bundle, and push
         run: |
           pip3 install --user --upgrade setuptools wheel pip
-          hack/operate.sh --push-images --bundle --extra-tag=latest --verbose --formatter
+          develop/operate.sh --push-images --bundle --extra-tag=latest --verbose --formatter
         if: github.ref == 'refs/heads/main'
