@@ -67,39 +67,41 @@
   assert:
     that: False not in (faulty_crs | json_query('results[].failed') | list)
 
+- name: Apply the Sonarqube CR in an alternate namespace
+  k8s:
+    state: present
+    namespace: '{{ namespace }}-alt'
+    definition: "{{ lookup('template', '/'.join([samples_dir, cr_file])) | from_yaml | combine(namespace_mod) }}"
+  vars:
+    cr_file: 'redhatgov_v1alpha1_sonarqube_molecule.yaml'
+    namespace_mod:
+      metadata:
+        namespace: '{{ namespace }}-alt'
+        name: sonarqube-sample-alt
+
+- name: Wait for CR to be Reconciled
+  k8s_info:
+    api_version: v1alpha1
+    kind: Sonarqube
+    namespace: '{{ namespace }}-alt'
+    name: sonarqube-sample-alt
+  register: namespace_modded_cr
+  until: namespace_modded_cr.resources[0].status | json_query("conditions[?(@.reason=='Successful')]")
+  retries: 10
+  delay: 30
+  ignore_errors: true
+
 - when:
-    scope == "namespace"
-  block:
-  - name: Apply the Sonarqube CR in an alternate namespace
-    k8s:
-      state: present
-      namespace: '{{ namespace }}-alt'
-      definition: "{{ lookup('template', '/'.join([samples_dir, cr_file])) | from_yaml | combine(namespace_mod) }}"
-      wait: yes
-    vars:
-      cr_file: 'redhatgov_v1alpha1_sonarqube_molecule.yaml'
-      namespace_mod:
-        metadata:
-          namespace: '{{ namespace }}-alt'
-          name: sonarqube-sample-alt
-    ignore_errors: true
-    register: namespace_modded_cr
+  - scope == "namespace"
+  - namespace_modded_cr.resources[0].status is defined
+  fail:
+    msg: "Additional reconciled CR found in alternate namespace when using namespace scope"
 
-  - name: Delay up to 60 seconds for Operator to respond to the CR
-    pause:
-      seconds: 60
-
-  - name: Fetch the CR
-    k8s_info:
-      api_version: v1alpha1
-      kind: Sonarqube
-      namespace: '{{ namespace }}-alt'
-      name: sonarqube-sample-alt
-    register: namespace_modded_cr
-
-  - name: Verify that Sonarqube failed to be created from the CR when appropriate
-    assert:
-      that: namespace_modded_cr.resources[0].status is not defined
+- when:
+  - scope == "cluster"
+  - namespace_modded_cr.resources[0].status is not defined
+  fail:
+    msg: "Additional reconciled CR NOT found in alternate namespace when using cluster scope"
 
 # TODO:
 #   - Validate SonarQube can be used
