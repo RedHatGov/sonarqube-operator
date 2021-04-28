@@ -2,7 +2,11 @@ domain: io
 layout: ansible.sdk.operatorframework.io/v1
 projectName: sonarqube-operator
 resources:
-- group: redhatgov
+-
+  # TODO(user): Uncomment the below line if this resource implements a controller, else delete it.
+  # controller: true
+  domain: io
+  group: redhatgov
   kind: Sonarqube
   version: v1alpha1
-version: 3-alpha
+version: "3"
