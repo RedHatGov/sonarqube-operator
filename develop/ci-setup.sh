@@ -10,7 +10,7 @@ export KUBECONFIG=$HOME/.kube/config
 pip3 install --user --upgrade setuptools wheel pip
 
 # Dependencies for test environment
-pip3 install --user docker==4.2.2 ansible molecule ansible-lint yamllint flake8 openshift jmespath
+pip3 install --user docker==4.2.2 ansible molecule ansible-lint yamllint flake8 openshift==v0.11.2 jmespath
 
 # Ansible dependencies
 ansible-galaxy collection install -r requirements.yml
