@@ -37,7 +37,7 @@
       _sonarqube_ssl: "{{ sonarqube.expose.ssl | default(True) }}"
 
       _sonarqube_image: "{{ sonarqube.image.src | default('quay.io/redhatgov/sonarqube') }}"
-      _sonarqube_image_tag: "{{ sonarqube.image.tag | default('latest') }}"
+      _sonarqube_image_tag: "{{ sonarqube.image.tag | default('8.3.1.34397') }}"
       _sonarqube_image_pull_policy: "{{ sonarqube.image.pull_policy | default('IfNotPresent') }}"
 
       _sonarqube_persistent: "{{ persistent | default(True) }}"

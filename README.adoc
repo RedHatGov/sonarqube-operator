@@ -10,9 +10,9 @@ It is implemented on top of the Red Hat https://sdk.operatorframework.io/[Operat
 
 == Building the Operator
 
-There is a script `hack/operate.sh` which will download the prerequisites (operator-sdk etc.), build the operator artifacts from operator-sdk defaults, package and push the operator container image, deploy the artifacts to a Kubernetes cluster, and create a `kind: Sonarqube` CR to deploy an instance. You should use the help page to look at what the various options do, but for the most part if you want to deploy SonarQube to a cluster directly from this repo you could run `hack/operate.sh -d`.
+There is a script `develop/operate.sh` which will download the prerequisites (operator-sdk etc.), build the operator artifacts from operator-sdk defaults, package and push the operator container image, deploy the artifacts to a Kubernetes cluster, and create a `kind: Sonarqube` CR to deploy an instance. You should use the help page to look at what the various options do, but for the most part if you want to deploy SonarQube to a cluster directly from this repo you could run `develop/operate.sh -d`.
 
-Before running the script make sure to update the location of the container image to a repository you have access to. If you decide to build your own container image for the operator, make sure to update `hack/operate.conf` with an updated container image location and add the `-p` flag to `operate.sh`.
+Before running the script make sure to update the location of the container image to a repository you have access to. If you decide to build your own container image for the operator, make sure to update `develop/operate.conf` with an updated container image location and add the `-p` flag to `operate.sh`.
 
 == Installation
 
@@ -26,7 +26,7 @@ Perform the following tasks as *cluster-admin*:
 +
 [source,sh]
 ----
-hack/operate.sh
+develop/operate.sh
 ----
 
 . Once the Operator pod is running the Operator is ready to start creating SonarQube Servers.
@@ -34,14 +34,14 @@ hack/operate.sh
 +
 [source,sh]
 ----
-hack/operate.sh --deploy-cr
+develop/operate.sh --deploy-cr
 ----
 
 . To install the operator with RBAC scoped to a specific namespace, deploying a Role and RoleBinding instead of a ClusterRole and ClusterRoleBinding:
 +
 [source,sh]
 ----
-hack/operate.sh --overlay=namespaced --namespace=mynamespace
+develop/operate.sh --overlay=namespaced --namespace=mynamespace
 ----
 
 == Deploying a custom SonarQube instance using the Operator
@@ -90,7 +90,7 @@ In case you wish to uninstall the SonarQube Operator make sure that there are no
 
 [source,sh]
 ----
-hack/operate.sh --remove
+develop/operate.sh --remove
 ----
 
 OLM uninstallation for OLM-based operators can be handled through the UI, or by deleting the `Subscription`.
@@ -104,7 +104,7 @@ If you are using a `registries.conf` change and/or ImageContentSourcePolicy mirr
 To change the image sources for all necessary images to deploy the operator without such a policy, you need to have the following images hosted in a container repository on your disconnected network:
 
 . quay.io/redhatgov/sonarqube-operator:latest
-. quay.io/redhatgov/sonarqube:latest
+. quay.io/redhatgov/sonarqube:8.3.1.34397
 . Some PostgreSQL 10 image that either behaves like the Red Hat PostgreSQL 10 RHEL 8 image or the docker.io/library/postgres:10 image.
 
 The places where you must update those sources are then, respectively:
@@ -112,6 +112,6 @@ The places where you must update those sources are then, respectively:
 . The `kind: Sonarqube` custom resource manifest: `spec.sonarqube.image.src` and `spec.sonarqube.image.tag` should be updated
 . The `kind: Sonarqube` custom resource manifest: `spec.postgresql.image.src` and `spec.postgresql.image.tag` should be updated
 
-If you intend on using `hack/operate.sh` it expects you to be in a development environment. Operator installation from this script therefore expects access to the internet. This comes with one extra concern: If `kustomize` isn't in your path, it tries to download it from the internet and save it locally into a `.gitignore`d folder. If you intend on using `hack/operate.sh` to install the operator, you should also bring `kustomize` and place it in the `$PATH` of the user who will be running the script. Additionally, in order to install the operator with `hack/operate.sh` you'll need to make the following change:
+If you intend on using `develop/operate.sh` it expects you to be in a development environment. Operator installation from this script therefore expects access to the internet. This comes with one extra concern: If `kustomize` isn't in your path, it tries to download it from the internet and save it locally into a `.gitignore`d folder. If you intend on using `develop/operate.sh` to install the operator, you should also bring `kustomize` and place it in the `$PATH` of the user who will be running the script. Additionally, in order to install the operator with `develop/operate.sh` you'll need to make the following change:
 
-. `hack/operate.conf`: IMG should point to the sonarqube-operator image in your environment
+. `develop/operate.conf`: IMG should point to the sonarqube-operator image in your environment

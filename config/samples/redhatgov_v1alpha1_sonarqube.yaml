@@ -15,7 +15,7 @@ spec:
       kind: Ingress                       # This can be of kind Route on OpenShift (the default)
     image:
       src: quay.io/redhatgov/sonarqube
-      tag: latest
+      tag: '8.3.1.34397'
       pullPolicy: Always
     volumeSize: 1Gi
   persistent: true
